@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FBFBFA">
+<title>Sổ thuê xe</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PREMIUM UTILITARIAN MINIMALISM
+   Workspace-style document UI for bike rental ledger
+============================================================ */
+:root {
+  --bg: #FBFBFA;
+  --bg-card: #FFFFFF;
+  --bg-soft: #F7F6F3;
+  --line: #EAEAEA;
+  --line-soft: rgba(0, 0, 0, 0.06);
+  --ink: #2F3437;
+  --ink-dim: #787774;
+  --ink-mute: #9B9A97;
+
+  --red-bg: #FDEBEC;
+  --red-ink: #9F2F2D;
+  --blue-bg: #E1F3FE;
+  --blue-ink: #1F6C9F;
+  --green-bg: #EDF3EC;
+  --green-ink: #346538;
+  --yellow-bg: #FBF3DB;
+  --yellow-ink: #956400;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Geist', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+body {
+  padding-bottom: 92px;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(160, 130, 90, 0.025), transparent 60%);
+}
+
+/* ============ TYPOGRAPHY ============ */
+.serif {
+  font-family: 'Instrument Serif', 'Newsreader', 'Playfair Display', serif;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+.mono {
+  font-family: 'Geist Mono', 'SF Mono', 'JetBrains Mono', monospace;
+  font-feature-settings: 'ss01';
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
+
+/* ============ TOPBAR ============ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(251, 251, 250, 0.86);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px 12px;
+}
+.topbar-inner {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.topbar .ops { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--ink-mute); margin-top: 5px; letter-spacing: 0.02em; }
+.topbar .date {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px; color: var(--ink-dim);
+  letter-spacing: 0.01em;
+}
+
+/* ============ PAGE ============ */
+.page { display: none; padding: 18px 16px 4px; max-width: 720px; margin: 0 auto; }
+.page.active { display: block; animation: fadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ HERO READOUT ============ */
+.hero {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 24px 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(159, 47, 45, 0.04), transparent 60%);
+  pointer-events: none;
+}
+.hero .h-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.hero .h-amount {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 13vw, 4.8rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+  margin: 8px 0 4px;
+  font-weight: 400;
+  word-break: break-word;
+}
+.hero .h-amount .unit {
+  font-family: 'Geist', sans-serif;
+  font-size: 0.22em;
+  color: var(--ink-mute);
+  margin-left: 8px;
+  letter-spacing: 0;
+  vertical-align: 0.6em;
+  text-transform: uppercase;
+}
+.hero .h-sub {
+  font-size: 15px;
+  color: var(--ink-dim);
+  margin-top: 8px;
+}
+.hero .h-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 20px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.hero .h-meta > div {
+  background: var(--bg-card);
+  padding: 12px 14px;
+}
+.hero .h-meta .mk {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.hero .h-meta .mv {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px; letter-spacing: -0.025em; line-height: 1;
+  margin-top: 6px; color: var(--ink);
+}
+
+/* ============ SECTION HEAD ============ */
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 28px 4px 14px;
+}
+.section-head h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.section-head .s-meta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px; color: var(--ink-mute);
+  letter-spacing: 0.02em;
+}
+
+/* ============ TAGS / FILTER CHIPS ============ */
+.tag {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: 'Geist', sans-serif;
+}
+.tag-red    { background: var(--red-bg);    color: var(--red-ink); }
+.tag-blue   { background: var(--blue-bg);   color: var(--blue-ink); }
+.tag-green  { background: var(--green-bg);  color: var(--green-ink); }
+.tag-yellow { background: var(--yellow-bg); color: var(--yellow-ink); }
+.tag-gray   { background: var(--bg-soft);   color: var(--ink-dim); }
+
+.filter-bar {
+  display: flex; gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.filter-chip:active { transform: scale(0.97); }
+.filter-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ============ LEDGER / RENTAL CARDS ============ */
+.ledger {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rental {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 14px;
+  padding: 16px 16px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 200ms;
+  align-items: center;
+}
+.rental:last-child { border-bottom: none; }
+.rental:active { background: var(--bg-soft); }
+
+.rental .r-thumb {
+  width: 64px; height: 48px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-mute);
+}
+.rental .r-thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.rental.expense .r-thumb { background: var(--yellow-bg); border-color: var(--yellow-bg); color: var(--yellow-ink); }
+.rental.paid .r-thumb img,
+.rental.cancelled .r-thumb img { opacity: 0.4; filter: grayscale(0.6); }
+
+.rental .info { min-width: 0; }
+.rental .customer {
+  font-size: 13.5px;
+  color: var(--ink-dim);
+  margin-top: 4px;
+  font-family: 'Geist', sans-serif;
+}
+.rental .customer::before {
+  content: "·"; margin-right: 5px; color: var(--ink-mute);
+}
+.rental .head-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 5px;
+}
+.rental .bike-name {
+  font-size: 16.5px; font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0;
+  line-height: 1.25;
+}
+.rental.paid .bike-name { color: var(--ink-dim); }
+.rental.cancelled .bike-name { color: var(--ink-mute); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.rental .meta-row {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: var(--ink-dim);
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+.rental .meta-row .dot { color: var(--ink-mute); margin: 0 6px; }
+
+.rental .amount-block { text-align: right; flex-shrink: 0; }
+.rental .amount {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--ink);
+  font-weight: 400;
+}
+.rental.expense .amount { color: var(--red-ink); }
+.rental.paid .amount { color: var(--ink-dim); }
+.rental.cancelled .amount { color: var(--ink-mute); }
+.rental .amount-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* ============ EMPTY STATE ============ */
+.empty {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty .e-icon {
+  width: 32px; height: 32px;
+  margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-mute);
+}
+.empty .e-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.empty .e-sub {
+  font-size: 15px;
+  color: var(--ink-dim);
+  margin-top: 8px;
+}
+
+/* ============ INVENTORY BENTO ============ */
+.inv-bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.inv-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.inv-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.inv-card .ic-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.inv-card .thumb {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.inv-card .thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: 0.92;
+}
+.inv-card .iname {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.inv-card .ival {
+  font-family: 'Instrument Serif', serif;
+  font-size: 52px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+  margin-top: 6px;
+}
+.inv-card .ival.zero { color: var(--ink-mute); }
+.inv-card .ictl {
+  display: flex; gap: 6px; margin-top: 12px;
+}
+.inv-card .ictl button {
+  flex: 1;
+  height: 36px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: 'Geist', sans-serif;
+  font-size: 18px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 180ms;
+}
+.inv-card .ictl button:active { transform: scale(0.96); background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ============ STATS LIST ============ */
+.stats {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.stat-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-row .k {
+  font-size: 15px;
+  color: var(--ink-dim);
+}
+.stat-row .v {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  font-weight: 400;
+}
+.stat-row .v.red { color: var(--red-ink); }
+.stat-row .v .u {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-mute);
+  margin-left: 4px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ============ FAB ============ */
+.fab {
+  position: fixed; bottom: 96px; right: 20px;
+  width: 58px; height: 58px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  font-family: 'Geist', sans-serif;
+  font-size: 28px;
+  font-weight: 300;
+  z-index: 90;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fab:active { transform: scale(0.94); }
+
+/* ============ BOTTOM NAV ============ */
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(251, 251, 250, 0.86);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+.tab {
+  background: none; border: none;
+  padding: 6px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: color 180ms;
+}
+.tab .icon-wrap {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-mute);
+}
+.tab svg { width: 22px; height: 22px; }
+.tab.active { color: var(--ink); }
+.tab.active .icon-wrap { color: var(--ink); }
+
+/* ============ BUTTONS ============ */
+.btn {
+  display: block; width: 100%;
+  padding: 15px 16px;
+  font-family: 'Geist', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  color: var(--ink);
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+.btn-primary:active { background: #1a1a1a; }
+.btn-danger {
+  background: var(--bg-card); color: var(--red-ink); border-color: var(--line);
+}
+.btn-ghost {
+  background: transparent; border: none; color: var(--ink-dim);
+}
+
+/* ============ SETTINGS ============ */
+.cfg-card {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.cfg-card label.k {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: block;
+  margin-bottom: 10px;
+}
+.cfg-card input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: 'Geist', sans-serif;
+  font-size: 17px;
+  color: var(--ink);
+  padding: 0;
+  font-weight: 500;
+}
+.cfg-card input:focus { outline: none; }
+
+.bike-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 100px 30px;
+  gap: 12px;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 6px;
+  transition: box-shadow 200ms;
+}
+.bike-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.bike-row .thumb {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.bike-row .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.bike-row .fields input {
+  width: 100%; border: none; background: transparent;
+  font-family: 'Geist', sans-serif;
+  font-size: 15.5px; font-weight: 500;
+  color: var(--ink);
+  padding: 2px 0;
+}
+.bike-row .fields .img-path {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px; color: var(--ink-mute); font-weight: 400;
+}
+.bike-row .price-input input {
+  width: 100%;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  text-align: right;
+  color: var(--ink);
+}
+.bike-row .del {
+  width: 30px; height: 30px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.bike-row .del:active { background: var(--red-bg); color: var(--red-ink); border-color: var(--red-bg); }
+
+/* ============ MODAL ============ */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(20, 20, 18, 0.42);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: flex-end;
+  animation: fadeIn 200ms ease;
+}
+.modal-bg.show { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--bg);
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  animation: slideUp 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-head {
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0;
+  background: var(--bg);
+  z-index: 5;
+}
+.modal-head h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.modal-head .x {
+  width: 32px; height: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-body { padding: 18px; }
+
+/* ============ FORM ============ */
+.form-row { margin-bottom: 18px; }
+.form-row > label {
+  display: block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 10px;
+}
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: 'Geist', sans-serif;
+  font-size: 17px;
+  padding: 14px 16px;
+  transition: border-color 180ms;
+}
+.form-row input:focus,
+.form-row textarea:focus { outline: none; border-color: var(--ink); }
+.form-row textarea { resize: vertical; min-height: 60px; }
+.form-row .hint {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-mute);
+  margin-top: 8px;
+}
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ============ SEGMENTED ============ */
+.segmented {
+  display: grid;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+.segmented.cols-2 { grid-template-columns: 1fr 1fr; }
+.segmented.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.seg-opt {
+  padding: 12px 6px;
+  text-align: center;
+  font-family: 'Geist', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.seg-opt.selected {
+  background: var(--bg-card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ============ BIKE PICKER ============ */
+.bike-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.bike-opt {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bike-opt:active { transform: scale(0.97); }
+.bike-opt.selected {
+  border-color: var(--ink);
+  background: var(--bg-soft);
+}
+.bike-opt .thumb {
+  width: 100%; aspect-ratio: 4/3;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.bike-opt .thumb img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.bike-opt .bn {
+  font-size: 13.5px; font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.bike-opt .bp {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-mute);
+  margin-top: 3px;
+}
+
+/* ============ EXPORT MODAL ============ */
+.check-list {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 44vh;
+  overflow-y: auto;
+}
+.check-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item input[type=checkbox] {
+  width: 22px; height: 22px;
+  accent-color: var(--ink);
+}
+.check-item .ci-info { font-size: 14.5px; color: var(--ink); line-height: 1.45; }
+.check-item .ci-amount {
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.check-item.expense .ci-amount { color: var(--red-ink); }
+
+#exportCanvas {
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-top: 12px;
+  display: none;
+}
+.export-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+
+/* ============ FOOTNOTE ============ */
+.foot-note {
+  margin-top: 32px;
+  padding: 16px 4px 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-mute);
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+
+/* ============ KBD ============ */
+kbd {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 7px;
+  color: var(--ink-dim);
+}
+
+/* ============ ANIMATION HELPERS ============ */
+.fade-in {
+  animation: fadeUp 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.rental, .inv-card, .bike-row, .cfg-card {
+  animation: fadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOPBAR ============ -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div>
+      <h1>Sổ thuê xe</h1>
+      <div class="ops"><span id="opName">Lượng</span> · Minh Quý</div>
+    </div>
+    <div class="date" id="topbarDate">—</div>
+  </div>
+</div>
+
+<!-- ============ PAGE: HOME ============ -->
+<div class="page active" id="page-home">
+
+  <div class="hero fade-in">
+    <div class="h-label">Cần thanh toán Minh Quý</div>
+    <div class="h-amount" id="totalUnpaid">0<span class="unit">đ</span></div>
+    <div class="h-sub" id="totalSubtitle">Chưa có lượt nào cần thanh toán</div>
+
+    <div class="h-meta">
+      <div>
+        <div class="mk">Cần TT</div>
+        <div class="mv" id="cntUnpaid">0</div>
+      </div>
+      <div>
+        <div class="mk">Dự kiến</div>
+        <div class="mv" id="cntPlanned">0</div>
+      </div>
+      <div>
+        <div class="mk">Ứng trước</div>
+        <div class="mv" id="cntAdvanced">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <h2>Quyết toán</h2>
+    <div class="s-meta" id="ledgerCount">0 mục</div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-chip active" data-filter="active" onclick="setFilter('active')">Đang mở</button>
+    <button class="filter-chip" data-filter="all" onclick="setFilter('all')">Tất cả</button>
+    <button class="filter-chip" data-filter="unpaid" onclick="setFilter('unpaid')">Cần thanh toán</button>
+    <button class="filter-chip" data-filter="planned" onclick="setFilter('planned')">Dự kiến</button>
+    <button class="filter-chip" data-filter="paid" onclick="setFilter('paid')">Đã thanh toán</button>
+  </div>
+
+  <div id="rentalList"></div>
+
+  <div class="foot-note">Nhấn <kbd>+</kbd> để thêm lượt thuê hoặc chi phí</div>
+</div>
+
+<!-- ============ PAGE: INVENTORY ============ -->
+<div class="page" id="page-inv">
+
+  <div class="section-head">
+    <h2>Kho xe tại homestay</h2>
+    <div class="s-meta" id="stockTotal">0 xe</div>
+  </div>
+  <div class="inv-bento" id="invGrid"></div>
+
+  <div class="section-head">
+    <h2>Thống kê tháng</h2>
+    <div class="s-meta" id="monthLabel">—</div>
+  </div>
+  <div class="stats" id="monthStats"></div>
+
+  <div class="foot-note">Cập nhật tự động theo số liệu trong quyết toán</div>
+</div>
+
+<!-- ============ PAGE: SETTINGS ============ -->
+<div class="page" id="page-settings">
+
+  <div class="section-head">
+    <h2>Homestay</h2>
+    <div class="s-meta">Định danh</div>
+  </div>
+  <div class="cfg-card">
+    <label class="k">Tên homestay</label>
+    <input id="homestayName" placeholder="VD: Homestay Lượng" oninput="saveHomestayName()">
+  </div>
+
+  <div class="section-head">
+    <h2>Danh mục xe</h2>
+    <div class="s-meta">Giá / ngày</div>
+  </div>
+  <div id="bikeConfigList"></div>
+  <button class="btn" onclick="addBikeConfig()">+ Thêm loại xe</button>
+
+  <div class="section-head">
+    <h2>Dữ liệu</h2>
+    <div class="s-meta">Sao lưu</div>
+  </div>
+  <button class="btn btn-primary" onclick="exportData()">Tải file sao lưu</button>
+  <button class="btn" onclick="document.getElementById('importFile').click()">Khôi phục từ file</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  <button class="btn btn-danger" onclick="resetAll()">Xóa toàn bộ dữ liệu</button>
+
+  <div class="foot-note">Phiên bản 1.0 · Dữ liệu lưu trên thiết bị này</div>
+</div>
+
+<!-- ============ TABS ============ -->
+<div class="tabs">
+  <button class="tab active" data-page="home" onclick="setPage('home')">
+    <span class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h10"/>
+      </svg>
+    </span>
+    Quyết toán
+  </button>
+  <button class="tab" data-page="inv" onclick="setPage('inv')">
+    <span class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="8" height="8" rx="1"/>
+        <rect x="13" y="3" width="8" height="8" rx="1"/>
+        <rect x="3" y="13" width="8" height="8" rx="1"/>
+        <rect x="13" y="13" width="8" height="8" rx="1"/>
+      </svg>
+    </span>
+    Kho xe
+  </button>
+  <button class="tab" data-page="export" onclick="openExport()">
+    <span class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/>
+      </svg>
+    </span>
+    Xuất ảnh
+  </button>
+  <button class="tab" data-page="settings" onclick="setPage('settings')">
+    <span class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </span>
+    Cài đặt
+  </button>
+</div>
+
+<button class="fab" onclick="openRentalModal()" aria-label="Thêm">+</button>
+
+<!-- ============ MODAL: RENTAL ============ -->
+<div class="modal-bg" id="rentalModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="rentalModalTitle">Thêm lượt thuê</h3>
+      <button class="x" onclick="closeModal('rentalModal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row">
+        <label>Loại</label>
+        <div class="segmented cols-2" id="kindPicker">
+          <button class="seg-opt selected" data-kind="rental" onclick="selectKind('rental')">Thuê xe</button>
+          <button class="seg-opt" data-kind="expense" onclick="selectKind('expense')">Chi phí phát sinh</button>
+        </div>
+      </div>
+
+      <div id="rentalFields">
+        <div class="form-row">
+          <label>Chọn xe</label>
+          <div class="bike-picker" id="bikePicker"></div>
+        </div>
+
+        <div class="form-row">
+          <label>Ghi chú xe</label>
+          <input id="bikeNote" placeholder="VD: đỏ, đen, lấy nhà Linh">
+        </div>
+
+        <div class="form-row">
+          <label>Tên khách <span style="color:var(--ink-mute);text-transform:none;letter-spacing:0;font-family:inherit;font-size:11px;">· có thể bỏ trống</span></label>
+          <input id="customerName" placeholder="VD: anh Hùng, chị Lan">
+        </div>
+
+        <div class="row2">
+          <div class="form-row">
+            <label>Từ ngày</label>
+            <input type="date" id="dateFrom">
+          </div>
+          <div class="form-row">
+            <label>Đến hết ngày</label>
+            <input type="date" id="dateTo">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="form-row">
+            <label>Số ngày</label>
+            <input type="number" id="days" step="0.5" min="0">
+            <div class="hint">0.5 = nửa ngày · giá ×50%</div>
+          </div>
+          <div class="form-row">
+            <label>Giá / ngày</label>
+            <input type="number" id="pricePerDay" step="1000">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Trạng thái</label>
+          <div class="segmented cols-4">
+            <button class="seg-opt selected" data-status="unpaid" onclick="selectStatus('unpaid')">Cần TT</button>
+            <button class="seg-opt" data-status="planned" onclick="selectStatus('planned')">Dự kiến</button>
+            <button class="seg-opt" data-status="paid" onclick="selectStatus('paid')">Đã TT</button>
+            <button class="seg-opt" data-status="cancelled" onclick="selectStatus('cancelled')">Hủy</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="expenseFields" style="display:none;">
+        <div class="form-row">
+          <label>Mô tả chi phí</label>
+          <input id="expDesc" placeholder="VD: Thay phanh đĩa xe Vision">
+        </div>
+        <div class="form-row">
+          <label>Số tiền</label>
+          <input type="number" id="expAmount" step="1000">
+          <div class="hint">Bạn ứng trước · sẽ trừ vào số phải trả Minh Quý</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveRental()">Lưu</button>
+      <button class="btn btn-ghost" onclick="closeModal('rentalModal')">Hủy</button>
+      <button class="btn btn-danger" id="deleteRentalBtn" onclick="deleteRental()" style="display:none;">Xóa lượt này</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EXPORT ============ -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Xuất báo cáo</h3>
+      <button class="x" onclick="closeModal('exportModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Tiêu đề báo cáo</label>
+        <input id="exportTitle" placeholder="VD: Quyết toán xe ngày 28/4">
+      </div>
+
+      <div class="form-row">
+        <label>Chọn lượt đưa vào báo cáo</label>
+        <div class="check-list" id="exportCheckList"></div>
+      </div>
+
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-family:inherit;font-size:13.5px;color:var(--ink);">
+          <input type="checkbox" id="includeInventory" checked style="width:18px;height:18px;accent-color:var(--ink);">
+          Kèm bảng xe rảnh tại homestay
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="generateBtn" onclick="handleGenerate()">Tạo ảnh báo cáo</button>
+
+      <canvas id="exportCanvas"></canvas>
+
+      <div class="export-actions" id="exportActions" style="display:none;">
+        <button class="btn btn-primary" onclick="downloadReport()">Tải ảnh</button>
+        <button class="btn" onclick="markSelectedPaid()">Đánh dấu đã TT</button>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal('exportModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SỔ THUÊ XE — Core logic
+// ============================================================
+const STORAGE_KEY = 'bikerental_v1';
+
+const DEFAULT_BIKES = [
+  { id: 'wave',     name: 'Wave Alpha', img: 'bikes/wave-alpha.jpg', price: 90000 },
+  { id: 'vision',   name: 'Vision',     img: 'bikes/vision.png',     price: 140000 },
+  { id: 'airblade', name: 'Airblade',   img: 'bikes/airblade.jpg',   price: 160000 },
+  { id: 'future',   name: 'Future',     img: 'bikes/future.png',     price: 110000 },
+  { id: 'winner',   name: 'Winner X',   img: 'bikes/winner.png',     price: 170000 },
+  { id: 'pg1',      name: 'PG-1',       img: 'bikes/pg1.jpg',        price: 200000 },
+  { id: 'lead',     name: 'Lead',       img: 'bikes/lead.jpg',       price: 150000 },
+  { id: 'xr',       name: 'XR',         img: 'bikes/xr.jpg',         price: 200000 },
+];
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return {
+    homestay: 'Lượng',
+    bikes: DEFAULT_BIKES,
+    rentals: [],
+    inventory: {},
+  };
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ============ UTILS ============
+function fmtMoney(n) {
+  if (n == null || isNaN(n)) return '';
+  const sign = n < 0 ? '-' : '';
+  return sign + Math.abs(n).toLocaleString('vi-VN');
+}
+function fmtDate(iso) {
+  if (!iso) return '...';
+  const [y, m, d] = iso.split('-');
+  return `${parseInt(d)}/${parseInt(m)}`;
+}
+function calcDays(from, to) {
+  if (!from || !to) return 0;
+  const a = new Date(from), b = new Date(to);
+  const d = Math.round((b - a) / 86400000) + 1;
+  return d > 0 ? d : 0;
+}
+function bikeById(id) { return state.bikes.find(b => b.id === id) || { name: id, img: '', price: 0 }; }
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function escapeHtml(s) {
+  return String(s || '').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);
+}
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function calcAmount(r) {
+  if (r.kind === 'expense') return -(r.expAmount || 0);
+  if (r.status === 'cancelled') return 0;
+  return Math.round((r.days || 0) * (r.pricePerDay || 0));
+}
+
+// ============ NAV ============
+function setPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelector(`.tab[data-page="${p}"]`).classList.add('active');
+  if (p === 'inv') renderInventory();
+  if (p === 'settings') renderSettings();
+  if (p === 'home') renderHome();
+}
+
+// ============ HOME ============
+let currentFilter = 'active';
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.filter-chip[data-filter="${f}"]`).classList.add('active');
+  renderHome();
+}
+
+function renderHome() {
+  const list = document.getElementById('rentalList');
+  let rentals = [...state.rentals];
+
+  if (currentFilter === 'active') {
+    rentals = rentals.filter(r => r.status === 'unpaid' || r.status === 'planned');
+  } else if (currentFilter !== 'all') {
+    rentals = rentals.filter(r => r.status === currentFilter);
+  }
+
+  rentals.sort((a, b) => {
+    const da = a.dateFrom || a.createdAt || '';
+    const db = b.dateFrom || b.createdAt || '';
+    return da.localeCompare(db);
+  });
+
+  document.getElementById('ledgerCount').textContent = `${rentals.length} mục`;
+
+  if (rentals.length === 0) {
+    list.innerHTML = `<div class="empty fade-in">
+      <div class="e-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </div>
+      <div class="e-title">Chưa có mục nào</div>
+      <div class="e-sub">Nhấn nút <kbd>+</kbd> ở góc dưới để thêm lượt thuê</div>
+    </div>`;
+  } else {
+    list.innerHTML = `<div class="ledger">${rentals.map((r, i) => renderRental(r, i)).join('')}</div>`;
+  }
+
+  // Summary
+  const unpaidList = state.rentals.filter(r => r.status === 'unpaid' || r.kind === 'expense');
+  const totalUnpaid = unpaidList.reduce((s, r) => s + calcAmount(r), 0);
+  document.getElementById('totalUnpaid').innerHTML =
+    fmtMoney(totalUnpaid) + '<span class="unit">đ</span>';
+
+  const cntU = state.rentals.filter(r => r.status === 'unpaid' && r.kind !== 'expense').length;
+  const cntP = state.rentals.filter(r => r.status === 'planned').length;
+  const cntA = state.rentals.filter(r => r.kind === 'expense').length;
+
+  document.getElementById('cntUnpaid').textContent = cntU;
+  document.getElementById('cntPlanned').textContent = cntP;
+  document.getElementById('cntAdvanced').textContent = cntA;
+
+  const sub = document.getElementById('totalSubtitle');
+  if (cntU + cntA === 0) sub.textContent = 'Chưa có lượt nào cần thanh toán';
+  else sub.textContent = `${cntU} lượt thuê chưa thanh toán${cntA > 0 ? ` · trừ ${cntA} khoản ứng trước` : ''}`;
+}
+
+function renderRental(r, idx) {
+  const styleDelay = `--i:${idx}`;
+  if (r.kind === 'expense') {
+    return `<div class="rental expense" style="${styleDelay}" onclick="editRental('${r.id}')">
+      <div class="r-thumb">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="head-row">
+          <span class="bike-name">${escapeHtml(r.expDesc || 'Chi phí phát sinh')}</span>
+          <span class="tag tag-yellow">Ứng trước</span>
+        </div>
+        <div class="meta-row">Bạn ứng trước, Minh Quý hoàn lại</div>
+      </div>
+      <div class="amount-block">
+        <div class="amount">−${fmtMoney(r.expAmount || 0)}</div>
+        <div class="amount-sub">VND</div>
+      </div>
+    </div>`;
+  }
+  const b = bikeById(r.bikeId);
+  const name = b.name + (r.bikeNote ? ' · ' + r.bikeNote : '');
+  const amount = calcAmount(r);
+  const tagMap = {
+    unpaid: { text: 'Cần TT', cls: 'tag-red' },
+    planned: { text: 'Dự kiến', cls: 'tag-blue' },
+    paid: { text: 'Đã TT', cls: 'tag-green' },
+    cancelled: { text: 'Đã hủy', cls: 'tag-gray' },
+  };
+  const tag = tagMap[r.status] || tagMap.unpaid;
+  const daysStr = String(r.days || 0).replace('.', ',');
+  const customerLine = r.customerName
+    ? `<div class="customer">${escapeHtml(r.customerName)}</div>`
+    : '';
+  return `<div class="rental ${r.status}" style="${styleDelay}" onclick="editRental('${r.id}')">
+    <div class="r-thumb"><img src="${b.img}" onerror="this.style.display='none'"></div>
+    <div class="info">
+      <div class="head-row">
+        <span class="bike-name">${escapeHtml(name)}</span>
+        <span class="tag ${tag.cls}">${tag.text}</span>
+      </div>
+      <div class="meta-row">
+        ${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}
+        <span class="dot">·</span>
+        ${daysStr} ngày × ${fmtMoney(r.pricePerDay || 0)}
+      </div>
+      ${customerLine}
+    </div>
+    <div class="amount-block">
+      <div class="amount">${r.status === 'cancelled' ? '0' : fmtMoney(amount)}</div>
+      <div class="amount-sub">VND</div>
+    </div>
+  </div>`;
+}
+
+// ============ RENTAL MODAL ============
+let editingId = null;
+let selectedBikeId = null;
+let selectedStatus = 'unpaid';
+let selectedKind = 'rental';
+
+function openRentalModal() {
+  editingId = null;
+  selectedBikeId = state.bikes[0]?.id;
+  selectedStatus = 'unpaid';
+  selectedKind = 'rental';
+  document.getElementById('rentalModalTitle').textContent = 'Thêm lượt thuê';
+  document.getElementById('deleteRentalBtn').style.display = 'none';
+  document.getElementById('bikeNote').value = '';
+  document.getElementById('customerName').value = '';
+  document.getElementById('dateFrom').value = todayISO();
+  document.getElementById('dateTo').value = todayISO();
+  document.getElementById('days').value = 1;
+  document.getElementById('pricePerDay').value = bikeById(selectedBikeId).price;
+  document.getElementById('expDesc').value = '';
+  document.getElementById('expAmount').value = '';
+  renderBikePicker();
+  updateKindUI();
+  updateStatusUI();
+  showModal('rentalModal');
+}
+
+function editRental(id) {
+  const r = state.rentals.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById('rentalModalTitle').textContent = 'Sửa lượt thuê';
+  document.getElementById('deleteRentalBtn').style.display = 'block';
+  selectedKind = r.kind || 'rental';
+  selectedStatus = r.status || 'unpaid';
+  selectedBikeId = r.bikeId || state.bikes[0]?.id;
+  document.getElementById('bikeNote').value = r.bikeNote || '';
+  document.getElementById('customerName').value = r.customerName || '';
+  document.getElementById('dateFrom').value = r.dateFrom || '';
+  document.getElementById('dateTo').value = r.dateTo || '';
+  document.getElementById('days').value = r.days || 0;
+  document.getElementById('pricePerDay').value = r.pricePerDay || 0;
+  document.getElementById('expDesc').value = r.expDesc || '';
+  document.getElementById('expAmount').value = r.expAmount || '';
+  renderBikePicker();
+  updateKindUI();
+  updateStatusUI();
+  showModal('rentalModal');
+}
+
+function selectKind(k) { selectedKind = k; updateKindUI(); }
+function updateKindUI() {
+  document.querySelectorAll('#kindPicker .seg-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.kind === selectedKind);
+  });
+  document.getElementById('rentalFields').style.display = selectedKind === 'rental' ? 'block' : 'none';
+  document.getElementById('expenseFields').style.display = selectedKind === 'expense' ? 'block' : 'none';
+}
+function selectStatus(s) { selectedStatus = s; updateStatusUI(); }
+function updateStatusUI() {
+  document.querySelectorAll('#rentalFields .seg-opt').forEach(el => {
+    if (el.dataset.status) el.classList.toggle('selected', el.dataset.status === selectedStatus);
+  });
+}
+
+function renderBikePicker() {
+  const html = state.bikes.map(b => `
+    <div class="bike-opt ${b.id === selectedBikeId ? 'selected' : ''}" onclick="pickBike('${b.id}')">
+      <div class="thumb"><img src="${b.img}" onerror="this.style.opacity=0.15"></div>
+      <div class="bn">${escapeHtml(b.name)}</div>
+      <div class="bp">${fmtMoney(b.price)}đ</div>
+    </div>
+  `).join('');
+  document.getElementById('bikePicker').innerHTML = html;
+}
+
+function pickBike(id) {
+  selectedBikeId = id;
+  document.getElementById('pricePerDay').value = bikeById(id).price;
+  renderBikePicker();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['dateFrom', 'dateTo'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      const f = document.getElementById('dateFrom').value;
+      const t = document.getElementById('dateTo').value;
+      if (f && t) document.getElementById('days').value = calcDays(f, t);
+    });
+  });
+});
+
+function saveRental() {
+  const data = {
+    id: editingId || newId(),
+    kind: selectedKind,
+    createdAt: editingId ? (state.rentals.find(r=>r.id===editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+  };
+  if (selectedKind === 'rental') {
+    data.bikeId = selectedBikeId;
+    data.bikeNote = document.getElementById('bikeNote').value.trim();
+    data.customerName = document.getElementById('customerName').value.trim();
+    data.dateFrom = document.getElementById('dateFrom').value;
+    data.dateTo = document.getElementById('dateTo').value;
+    data.days = parseFloat(document.getElementById('days').value) || 0;
+    data.pricePerDay = parseInt(document.getElementById('pricePerDay').value) || 0;
+    data.status = selectedStatus;
+  } else {
+    data.expDesc = document.getElementById('expDesc').value.trim();
+    data.expAmount = parseInt(document.getElementById('expAmount').value) || 0;
+    data.status = 'unpaid';
+  }
+
+  if (editingId) {
+    const i = state.rentals.findIndex(r => r.id === editingId);
+    if (i >= 0) state.rentals[i] = data;
+  } else {
+    state.rentals.push(data);
+  }
+  saveState();
+  closeModal('rentalModal');
+  renderHome();
+}
+
+function deleteRental() {
+  if (!editingId) return;
+  if (!confirm('Xóa lượt này?')) return;
+  state.rentals = state.rentals.filter(r => r.id !== editingId);
+  saveState();
+  closeModal('rentalModal');
+  renderHome();
+}
+
+// ============ INVENTORY ============
+function renderInventory() {
+  const grid = document.getElementById('invGrid');
+  grid.innerHTML = state.bikes.map((b, i) => {
+    const q = state.inventory[b.id] || 0;
+    return `<div class="inv-card" style="--i:${i}">
+      <div class="ic-top">
+        <div class="thumb"><img src="${b.img}" onerror="this.style.opacity=0.15"></div>
+        <div class="iname">${escapeHtml(b.name)}</div>
+      </div>
+      <div class="ival ${q===0?'zero':''}">${q}</div>
+      <div class="ictl">
+        <button onclick="adjustInv('${b.id}', -1)" aria-label="Giảm">−</button>
+        <button onclick="adjustInv('${b.id}', 1)" aria-label="Tăng">+</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const totalQty = state.bikes.reduce((s, b) => s + (state.inventory[b.id] || 0), 0);
+  document.getElementById('stockTotal').textContent = `${totalQty} xe`;
+
+  const now = new Date();
+  const ym = now.toISOString().slice(0, 7);
+  document.getElementById('monthLabel').textContent =
+    `Tháng ${now.getMonth()+1}/${now.getFullYear()}`;
+
+  const monthRentals = state.rentals.filter(r =>
+    r.kind === 'rental' &&
+    r.status !== 'cancelled' && r.status !== 'planned' &&
+    r.dateFrom && r.dateFrom.startsWith(ym)
+  );
+  const totalDays = monthRentals.reduce((s, r) => s + (r.days || 0), 0);
+  const totalRevenue = monthRentals.reduce((s, r) => s + calcAmount(r), 0);
+  const expenses = state.rentals
+    .filter(r => r.kind === 'expense' && (r.createdAt || '').startsWith(ym))
+    .reduce((s, r) => s + (r.expAmount || 0), 0);
+
+  document.getElementById('monthStats').innerHTML = `
+    <div class="stat-row"><span class="k">Số lượt thuê</span><span class="v">${monthRentals.length}</span></div>
+    <div class="stat-row"><span class="k">Tổng ngày thuê</span><span class="v">${String(totalDays).replace('.', ',')}</span></div>
+    <div class="stat-row"><span class="k">Phải trả Minh Quý</span><span class="v">${fmtMoney(totalRevenue)}<span class="u">đ</span></span></div>
+    <div class="stat-row"><span class="k">Đã ứng trước</span><span class="v red">−${fmtMoney(expenses)}<span class="u">đ</span></span></div>
+  `;
+}
+
+function adjustInv(id, delta) {
+  state.inventory[id] = Math.max(0, (state.inventory[id] || 0) + delta);
+  saveState();
+  renderInventory();
+}
+
+// ============ SETTINGS ============
+function renderSettings() {
+  document.getElementById('homestayName').value = state.homestay || '';
+  document.getElementById('opName').textContent = state.homestay || 'Lượng';
+  const list = document.getElementById('bikeConfigList');
+  list.innerHTML = state.bikes.map((b, i) => `
+    <div class="bike-row" style="--i:${i}">
+      <div class="thumb"><img src="${b.img}" onerror="this.style.opacity=0.15"></div>
+      <div class="fields">
+        <input value="${escapeHtml(b.name)}" oninput="updateBikeName(${i}, this.value)">
+        <input class="img-path" value="${escapeHtml(b.img)}" placeholder="đường dẫn ảnh" oninput="updateBikeImg(${i}, this.value)">
+      </div>
+      <div class="price-input"><input type="number" value="${b.price}" step="1000" oninput="updateBikePrice(${i}, this.value)"></div>
+      <button class="del" onclick="deleteBike(${i})" aria-label="Xóa">×</button>
+    </div>
+  `).join('');
+}
+function updateBikeName(i, v) { state.bikes[i].name = v; saveState(); }
+function updateBikePrice(i, v) { state.bikes[i].price = parseInt(v) || 0; saveState(); }
+function updateBikeImg(i, v) { state.bikes[i].img = v; saveState(); }
+function deleteBike(i) {
+  if (!confirm('Xóa loại xe này?')) return;
+  state.bikes.splice(i, 1);
+  saveState();
+  renderSettings();
+}
+function addBikeConfig() {
+  state.bikes.push({ id: newId(), name: 'Xe mới', img: '', price: 100000 });
+  saveState();
+  renderSettings();
+}
+function saveHomestayName() {
+  state.homestay = document.getElementById('homestayName').value;
+  document.getElementById('opName').textContent = state.homestay || 'Lượng';
+  saveState();
+}
+
+// ============ EXPORT REPORT ============
+let exportSelected = new Set();
+
+function openExport() {
+  const list = state.rentals
+    .filter(r => r.status === 'unpaid' || r.status === 'planned' || r.kind === 'expense')
+    .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''));
+
+  exportSelected = new Set(list.filter(r => r.status === 'unpaid' || r.kind === 'expense').map(r => r.id));
+
+  const html = list.map(r => {
+    const checked = exportSelected.has(r.id) ? 'checked' : '';
+    let label, amt, cls = '';
+    if (r.kind === 'expense') {
+      label = (r.expDesc || 'Chi phí') + ' · ứng trước';
+      amt = '−' + fmtMoney(r.expAmount || 0);
+      cls = 'expense';
+    } else {
+      const b = bikeById(r.bikeId);
+      label = `${b.name}${r.bikeNote ? ' ' + r.bikeNote : ''} · ${fmtDate(r.dateFrom)}→${fmtDate(r.dateTo)}`;
+      amt = fmtMoney(calcAmount(r));
+    }
+    return `<label class="check-item ${cls}">
+      <input type="checkbox" ${checked} onchange="toggleExport('${r.id}', this.checked)">
+      <div class="ci-info">${escapeHtml(label)}</div>
+      <div class="ci-amount">${amt}</div>
+    </label>`;
+  }).join('');
+
+  document.getElementById('exportCheckList').innerHTML = html || `<div class="empty"><div class="e-title">Không có mục nào</div></div>`;
+
+  const today = new Date();
+  document.getElementById('exportTitle').value =
+    `Quyết toán xe ngày ${today.getDate()}/${today.getMonth() + 1}`;
+
+  document.getElementById('exportCanvas').style.display = 'none';
+  document.getElementById('exportActions').style.display = 'none';
+
+  showModal('exportModal');
+}
+
+function toggleExport(id, on) {
+  if (on) exportSelected.add(id);
+  else exportSelected.delete(id);
+}
+
+async function handleGenerate() {
+  const btn = document.getElementById('generateBtn');
+  const orig = btn.textContent;
+  btn.textContent = 'Đang tạo ảnh…';
+  btn.disabled = true;
+  try {
+    await generateReport();
+  } catch (e) {
+    alert('Lỗi: ' + e.message);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+
+// Preload an image and resolve with the Image element (or null on error)
+function loadImage(src) {
+  return new Promise((resolve) => {
+    if (!src) { resolve(null); return; }
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Draw rounded clipping rect (for image rounded corners)
+function clipRoundedRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.clip();
+}
+
+// Cover fit (like CSS object-fit: cover)
+function drawImageCover(ctx, img, x, y, w, h) {
+  const ir = img.width / img.height;
+  const tr = w / h;
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if (ir > tr) {
+    sw = img.height * tr;
+    sx = (img.width - sw) / 2;
+  } else {
+    sh = img.width / tr;
+    sy = (img.height - sh) / 2;
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// Draw the wrench glyph for expense rows
+function drawWrenchIcon(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.translate(cx, cy);
+  ctx.rotate(-Math.PI / 4);
+  const s = size / 22;
+  // handle
+  ctx.beginPath();
+  ctx.moveTo(-3 * s, -2 * s);
+  ctx.lineTo(-3 * s, 8 * s);
+  ctx.lineTo(3 * s, 8 * s);
+  ctx.lineTo(3 * s, -2 * s);
+  ctx.stroke();
+  // head opening
+  ctx.beginPath();
+  ctx.arc(0, -5 * s, 5 * s, Math.PI * 0.15, Math.PI * 0.85, false);
+  ctx.stroke();
+  ctx.restore();
+}
+
+async function generateReport() {
+  const title = document.getElementById('exportTitle').value || 'Quyết toán xe';
+  const includeInv = document.getElementById('includeInventory').checked;
+  const rows = state.rentals.filter(r => exportSelected.has(r.id))
+    .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''));
+
+  // ===== Preload all needed bike images (once, deduplicated) =====
+  const neededIds = new Set();
+  rows.forEach(r => { if (r.kind !== 'expense' && r.bikeId) neededIds.add(r.bikeId); });
+  if (includeInv) {
+    state.bikes
+      .filter(b => (state.inventory[b.id] || 0) > 0)
+      .forEach(b => neededIds.add(b.id));
+  }
+
+  const imgCache = {};
+  await Promise.all(Array.from(neededIds).map(async id => {
+    const b = bikeById(id);
+    imgCache[id] = await loadImage(b.img);
+  }));
+
+  const canvas = document.getElementById('exportCanvas');
+  const dpr = 2;
+  const W = 1400;
+  // STT / Ảnh / Loại xe / Ghi chú / Tính ngày / Giá / Thành tiền
+  const colW = [60, 110, 410, 240, 120, 170, 190];
+  const rowH = 80;
+  const headerH = 120;
+  const colHeaderH = 50;
+  const padding = 40;
+  const invRowH = 64;
+  const invHeaderH = 40;
+  const stockedBikes = state.bikes.filter(b => (state.inventory[b.id] || 0) > 0);
+  const invRows = includeInv ? stockedBikes.length : 0;
+  const invH = includeInv ? (60 + invHeaderH + Math.max(invRows, 1) * invRowH + 32) : 0;
+  const summaryH = 100;
+  const footH = 50;
+  const H = padding * 2 + headerH + colHeaderH + rows.length * rowH + summaryH + invH + footH;
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = '100%';
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // BG warm bone
+  ctx.fillStyle = '#FBFBFA';
+  ctx.fillRect(0, 0, W, H);
+
+  // ===== HEADER =====
+  ctx.fillStyle = '#787774';
+  ctx.font = '14px "Geist Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${state.homestay || 'Lượng'} · Minh Quý`, padding, padding + 18);
+  ctx.textAlign = 'right';
+  const dateStr = new Date().toLocaleDateString('vi-VN');
+  ctx.fillText(dateStr, W - padding, padding + 18);
+
+  // Title — Instrument Serif
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '54px "Instrument Serif", "Newsreader", serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(title, padding, padding + 84);
+
+  // subtle divider
+  ctx.strokeStyle = '#EAEAEA';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding, padding + headerH);
+  ctx.lineTo(W - padding, padding + headerH);
+  ctx.stroke();
+
+  // ===== COLUMN HEADERS =====
+  let y = padding + headerH + 4;
+  const headers = ['STT', 'Ảnh', 'Loại xe', 'Ghi chú', 'Tính ngày', 'Giá', 'Thành tiền'];
+
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '11.5px "Geist Mono", monospace';
+  let x = padding;
+  for (let i = 0; i < headers.length; i++) {
+    let alignX = x + colW[i] / 2;
+    if (i === 2) { ctx.textAlign = 'left'; alignX = x + 14; }
+    else if (i === 5 || i === 6) { ctx.textAlign = 'right'; alignX = x + colW[i] - 14; }
+    else ctx.textAlign = 'center';
+    ctx.fillText(headers[i].toUpperCase(), alignX, y + colHeaderH / 2 + 4);
+    x += colW[i];
+  }
+
+  // line under headers
+  ctx.strokeStyle = '#EAEAEA';
+  ctx.beginPath();
+  ctx.moveTo(padding, y + colHeaderH);
+  ctx.lineTo(W - padding, y + colHeaderH);
+  ctx.stroke();
+
+  // ===== ROWS =====
+  y += colHeaderH;
+  let total = 0;
+
+  // Pre-compute column x offsets
+  const cx = [padding];
+  for (let i = 0; i < colW.length; i++) cx.push(cx[i] + colW[i]);
+
+  rows.forEach((r, idx) => {
+    // BG: white card
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(padding, y, W - 2 * padding, rowH);
+
+    // row divider
+    ctx.strokeStyle = '#EAEAEA';
+    ctx.beginPath();
+    ctx.moveTo(padding, y + rowH);
+    ctx.lineTo(W - padding, y + rowH);
+    ctx.stroke();
+
+    let nameText, dateRangeText, daysText, priceText, amtText;
+    let tagText = '', tagBg = '', tagInk = '';
+    let amtColor = '#2F3437';
+
+    if (r.kind === 'expense') {
+      nameText = r.expDesc || 'Chi phí phát sinh';
+      dateRangeText = 'Em Lượng chi · Minh Quý hoàn lại';
+      tagText = 'Ứng trước';
+      tagBg = '#FBF3DB'; tagInk = '#956400';
+      daysText = '1';
+      priceText = '−' + fmtMoney(r.expAmount || 0);
+      amtText = '−' + fmtMoney(r.expAmount || 0);
+      amtColor = '#9F2F2D';
+      total -= (r.expAmount || 0);
+    } else {
+      const b = bikeById(r.bikeId);
+      nameText = `${b.name}${r.bikeNote ? ' · ' + r.bikeNote : ''}`;
+      dateRangeText = `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`
+        + (r.customerName ? `   ·   khách: ${r.customerName}` : '');
+      if (r.status === 'planned') {
+        tagText = 'Dự kiến'; tagBg = '#E1F3FE'; tagInk = '#1F6C9F';
+        daysText = '—'; priceText = '—'; amtText = '—';
+        amtColor = '#9B9A97';
+      } else if (r.status === 'cancelled') {
+        tagText = 'Đã hủy'; tagBg = '#F7F6F3'; tagInk = '#787774';
+        daysText = '0'; priceText = '—'; amtText = '0';
+        amtColor = '#9B9A97';
+      } else if (r.status === 'paid') {
+        tagText = 'Đã TT'; tagBg = '#EDF3EC'; tagInk = '#346538';
+        daysText = String(r.days || 0).replace('.', ',');
+        priceText = fmtMoney(r.pricePerDay || 0);
+        amtText = fmtMoney(calcAmount(r));
+        amtColor = '#787774';
+      } else {
+        tagText = 'Cần TT'; tagBg = '#FDEBEC'; tagInk = '#9F2F2D';
+        daysText = String(r.days || 0).replace('.', ',');
+        priceText = fmtMoney(r.pricePerDay || 0);
+        const amt = calcAmount(r);
+        amtText = fmtMoney(amt);
+        total += amt;
+      }
+    }
+
+    // ===== STT =====
+    ctx.fillStyle = '#9B9A97';
+    ctx.font = '14px "Geist Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(idx + 1).padStart(2, '0'), cx[0] + colW[0] / 2, y + rowH / 2 + 5);
+
+    // ===== IMAGE CELL =====
+    const imgPad = 10;
+    const imgW = colW[1] - imgPad * 2;
+    const imgH = rowH - imgPad * 2 - 4;
+    const imgX = cx[1] + imgPad;
+    const imgY = y + imgPad + 2;
+
+    // image bg + border
+    ctx.save();
+    clipRoundedRect(ctx, imgX, imgY, imgW, imgH, 6);
+    ctx.fillStyle = '#F7F6F3';
+    ctx.fillRect(imgX, imgY, imgW, imgH);
+    if (r.kind === 'expense') {
+      // wrench icon
+      drawWrenchIcon(ctx, imgX + imgW / 2, imgY + imgH / 2, 22, '#9B9A97');
+    } else {
+      const img = imgCache[r.bikeId];
+      if (img) drawImageCover(ctx, img, imgX, imgY, imgW, imgH);
+    }
+    ctx.restore();
+    // border
+    ctx.strokeStyle = '#EAEAEA';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(imgX + 6, imgY);
+    ctx.arcTo(imgX + imgW, imgY, imgX + imgW, imgY + imgH, 6);
+    ctx.arcTo(imgX + imgW, imgY + imgH, imgX, imgY + imgH, 6);
+    ctx.arcTo(imgX, imgY + imgH, imgX, imgY, 6);
+    ctx.arcTo(imgX, imgY, imgX + imgW, imgY, 6);
+    ctx.closePath();
+    ctx.stroke();
+
+    // ===== LOAI XE (name + date range stacked) =====
+    ctx.fillStyle = '#2F3437';
+    ctx.font = '600 16px "Geist", sans-serif';
+    ctx.textAlign = 'left';
+    let textToDraw = nameText;
+    const maxNameW = colW[2] - 28;
+    while (ctx.measureText(textToDraw).width > maxNameW && textToDraw.length > 8) {
+      textToDraw = textToDraw.slice(0, -2);
+    }
+    if (textToDraw !== nameText) textToDraw = textToDraw.slice(0, -1) + '…';
+    ctx.fillText(textToDraw, cx[2] + 14, y + rowH / 2 - 4);
+
+    // date range
+    ctx.fillStyle = '#787774';
+    ctx.font = '13px "Geist Mono", monospace';
+    ctx.fillText(dateRangeText, cx[2] + 14, y + rowH / 2 + 18);
+
+    // ===== TAG (pill) in Ghi chú column =====
+    if (tagText) {
+      ctx.font = '600 11px "Geist", sans-serif';
+      const tagW = ctx.measureText(tagText.toUpperCase()).width + 20;
+      const tagH = 24;
+      const tagX = cx[3] + (colW[3] - tagW) / 2;
+      const tagY = y + (rowH - tagH) / 2;
+      ctx.fillStyle = tagBg;
+      roundRect(ctx, tagX, tagY, tagW, tagH, 12);
+      ctx.fill();
+      ctx.fillStyle = tagInk;
+      ctx.textAlign = 'center';
+      ctx.fillText(tagText.toUpperCase(), tagX + tagW / 2, tagY + tagH / 2 + 4);
+    }
+
+    // ===== TINH NGAY =====
+    ctx.fillStyle = '#2F3437';
+    ctx.font = '400 26px "Instrument Serif", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(daysText, cx[4] + colW[4] / 2, y + rowH / 2 + 9);
+
+    // ===== GIA =====
+    ctx.fillStyle = '#787774';
+    ctx.font = '14px "Geist Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(priceText, cx[5] + colW[5] - 14, y + rowH / 2 + 5);
+
+    // ===== THANH TIEN — Instrument Serif =====
+    ctx.fillStyle = amtColor;
+    ctx.font = '400 26px "Instrument Serif", serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(amtText, cx[6] + colW[6] - 14, y + rowH / 2 + 9);
+
+    y += rowH;
+  });
+
+  // ===== SUMMARY =====
+  y += 20;
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '11.5px "Geist Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('CẦN THANH TOÁN', W - padding - 14, y + 18);
+
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '400 60px "Instrument Serif", serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(fmtMoney(total), W - padding - 60, y + 70);
+
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '14px "Geist Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('đ', W - padding - 14, y + 70);
+
+  y += summaryH;
+
+  // ===== INVENTORY =====
+  if (includeInv) {
+    // title
+    ctx.fillStyle = '#2F3437';
+    ctx.font = '400 30px "Instrument Serif", serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Xe rảnh tại homestay', padding, y + 26);
+
+    let totalQty = 0;
+    stockedBikes.forEach(b => { totalQty += (state.inventory[b.id] || 0); });
+
+    ctx.fillStyle = '#9B9A97';
+    ctx.font = '11.5px "Geist Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${totalQty} XE · ${stockedBikes.length} LOẠI`, W - padding, y + 26);
+
+    y += 50;
+
+    // 2-column grid: image | name | qty
+    const invColW = [110, W - 2 * padding - 110 - 180, 180];
+    const invCx = [padding];
+    for (let i = 0; i < invColW.length; i++) invCx.push(invCx[i] + invColW[i]);
+
+    // column header
+    ctx.fillStyle = '#9B9A97';
+    ctx.font = '11.5px "Geist Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('XE', invCx[0] + 8, y + invHeaderH / 2 + 4);
+    ctx.textAlign = 'right';
+    ctx.fillText('SỐ LƯỢNG', invCx[2] + invColW[2] - 14, y + invHeaderH / 2 + 4);
+
+    ctx.strokeStyle = '#EAEAEA';
+    ctx.beginPath();
+    ctx.moveTo(padding, y + invHeaderH);
+    ctx.lineTo(W - padding, y + invHeaderH);
+    ctx.stroke();
+
+    y += invHeaderH;
+
+    if (stockedBikes.length === 0) {
+      ctx.fillStyle = '#9B9A97';
+      ctx.font = 'italic 16px "Instrument Serif", serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('— Không còn xe nào tại homestay —', W / 2, y + invRowH / 2 + 5);
+      y += invRowH;
+    }
+
+    stockedBikes.forEach((b) => {
+      const q = state.inventory[b.id] || 0;
+
+      // image
+      const iPad = 10;
+      const iW = invColW[0] - iPad * 2;
+      const iH = invRowH - iPad * 2;
+      const iX = invCx[0] + iPad;
+      const iY = y + iPad;
+
+      ctx.save();
+      clipRoundedRect(ctx, iX, iY, iW, iH, 6);
+      ctx.fillStyle = '#F7F6F3';
+      ctx.fillRect(iX, iY, iW, iH);
+      const img = imgCache[b.id];
+      if (img) drawImageCover(ctx, img, iX, iY, iW, iH);
+      ctx.restore();
+      ctx.strokeStyle = '#EAEAEA';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(iX + 6, iY);
+      ctx.arcTo(iX + iW, iY, iX + iW, iY + iH, 6);
+      ctx.arcTo(iX + iW, iY + iH, iX, iY + iH, 6);
+      ctx.arcTo(iX, iY + iH, iX, iY, 6);
+      ctx.arcTo(iX, iY, iX + iW, iY, 6);
+      ctx.closePath();
+      ctx.stroke();
+
+      // name
+      ctx.fillStyle = '#2F3437';
+      ctx.font = '600 17px "Geist", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(b.name, invCx[1] + 4, y + invRowH / 2 + 6);
+
+      // qty
+      ctx.fillStyle = q > 0 ? '#2F3437' : '#9B9A97';
+      ctx.font = '400 34px "Instrument Serif", serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(String(q), invCx[2] + invColW[2] - 14, y + invRowH / 2 + 12);
+
+      y += invRowH;
+
+      ctx.strokeStyle = '#EAEAEA';
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(W - padding, y);
+      ctx.stroke();
+    });
+
+    y += 16;
+  }
+
+  // ===== FOOT =====
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '11px "Geist Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(`Sổ thuê xe · ${state.homestay || 'Lượng'}`, W / 2, H - padding);
+
+  document.getElementById('exportActions').style.display = 'grid';
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function downloadReport() {
+  const canvas = document.getElementById('exportCanvas');
+  const link = document.createElement('a');
+  const title = document.getElementById('exportTitle').value || 'quyet-toan';
+  link.download = title.replace(/[^a-z0-9À-ỹ]+/gi, '_').toLowerCase() + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function markSelectedPaid() {
+  if (!confirm(`Đánh dấu ${exportSelected.size} mục là đã thanh toán?`)) return;
+  state.rentals.forEach(r => {
+    if (exportSelected.has(r.id) && r.kind !== 'expense') {
+      r.status = 'paid';
+    }
+  });
+  state.rentals = state.rentals.filter(r => !(exportSelected.has(r.id) && r.kind === 'expense'));
+  saveState();
+  closeModal('exportModal');
+  renderHome();
+  alert('Đã cập nhật.');
+}
+
+// ============ MODAL ============
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ============ BACKUP / RESTORE ============
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `so-thue-xe-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.bikes || !data.rentals) throw new Error('Định dạng không hợp lệ');
+      if (!confirm('Khôi phục sẽ ghi đè dữ liệu hiện tại. Tiếp tục?')) return;
+      state = data;
+      saveState();
+      renderHome();
+      renderSettings();
+      renderInventory();
+      alert('Khôi phục thành công.');
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetAll() {
+  if (!confirm('Xóa toàn bộ dữ liệu? Không thể hoàn tác.')) return;
+  if (!confirm('Bạn chắc chắn?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = loadState();
+  renderHome();
+  renderSettings();
+  renderInventory();
+}
+
+// ============ INIT ============
+function initTopbar() {
+  const d = new Date();
+  const months = ['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
+  document.getElementById('topbarDate').textContent =
+    `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  document.getElementById('opName').textContent = state.homestay || 'Lượng';
+}
+initTopbar();
+renderHome();
+setInterval(initTopbar, 60000);
+
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', (e) => {
+    if (e.target === bg) bg.classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>
