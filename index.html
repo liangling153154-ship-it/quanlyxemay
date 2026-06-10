@@ -1661,20 +1661,20 @@ function drawWrenchIcon(ctx, cx, cy, size, color) {
   ctx.restore();
 }
 
+// ============================================================
+// MOBILE-FIRST CARD REPORT
+// ============================================================
 async function generateReport() {
   const title = document.getElementById('exportTitle').value || 'Quyết toán xe';
   const includeInv = document.getElementById('includeInventory').checked;
   const rows = state.rentals.filter(r => exportSelected.has(r.id))
     .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''));
 
-  // ===== Preload all needed bike images (once, deduplicated) =====
+  // Preload images
   const neededIds = new Set();
   rows.forEach(r => { if (r.kind !== 'expense' && r.bikeId) neededIds.add(r.bikeId); });
-  if (includeInv) {
-    state.bikes
-      .filter(b => (state.inventory[b.id] || 0) > 0)
-      .forEach(b => neededIds.add(b.id));
-  }
+  const stockedBikes = includeInv ? state.bikes.filter(b => (state.inventory[b.id] || 0) > 0) : [];
+  stockedBikes.forEach(b => neededIds.add(b.id));
 
   const imgCache = {};
   await Promise.all(Array.from(neededIds).map(async id => {
@@ -1682,23 +1682,25 @@ async function generateReport() {
     imgCache[id] = await loadImage(b.img);
   }));
 
+  // ===== Layout (portrait mobile-first) =====
   const canvas = document.getElementById('exportCanvas');
   const dpr = 2;
-  const W = 1400;
-  // STT / Ảnh / Loại xe / Ghi chú / Tính ngày / Giá / Thành tiền
-  const colW = [60, 110, 410, 240, 120, 170, 190];
-  const rowH = 80;
-  const headerH = 120;
-  const colHeaderH = 50;
-  const padding = 40;
-  const invRowH = 64;
-  const invHeaderH = 40;
-  const stockedBikes = state.bikes.filter(b => (state.inventory[b.id] || 0) > 0);
-  const invRows = includeInv ? stockedBikes.length : 0;
-  const invH = includeInv ? (60 + invHeaderH + Math.max(invRows, 1) * invRowH + 32) : 0;
-  const summaryH = 100;
-  const footH = 50;
-  const H = padding * 2 + headerH + colHeaderH + rows.length * rowH + summaryH + invH + footH;
+  const W = 750;
+  const padding = 32;
+  const cardGap = 14;
+  const cardH = 130;
+  const headerH = 180;
+  const summaryH = 200;
+  const invHeaderH = 80;
+  const invCardH = 92;
+  const footH = 60;
+
+  let H = padding + headerH + 16 + rows.length * (cardH + cardGap);
+  H += 8 + summaryH;
+  if (includeInv) {
+    H += 28 + invHeaderH + Math.max(stockedBikes.length, 1) * (invCardH + cardGap);
+  }
+  H += footH + padding;
 
   canvas.width = W * dpr;
   canvas.height = H * dpr;
@@ -1707,336 +1709,323 @@ async function generateReport() {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // BG warm bone
+  // BG
   ctx.fillStyle = '#FBFBFA';
   ctx.fillRect(0, 0, W, H);
 
   // ===== HEADER =====
-  ctx.fillStyle = '#787774';
-  ctx.font = '14px "Geist Mono", monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText(`${state.homestay || 'Lượng'} · Minh Quý`, padding, padding + 18);
-  ctx.textAlign = 'right';
-  const dateStr = new Date().toLocaleDateString('vi-VN');
-  ctx.fillText(dateStr, W - padding, padding + 18);
-
-  // Title
-  ctx.fillStyle = '#2F3437';
-  ctx.font = '300 48px "Be Vietnam Pro", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(title, padding, padding + 84);
-
-  // subtle divider
-  ctx.strokeStyle = '#EAEAEA';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padding, padding + headerH);
-  ctx.lineTo(W - padding, padding + headerH);
-  ctx.stroke();
-
-  // ===== COLUMN HEADERS =====
-  let y = padding + headerH + 4;
-  const headers = ['STT', 'Ảnh', 'Loại xe', 'Ghi chú', 'Tính ngày', 'Giá', 'Thành tiền'];
+  let y = padding;
 
   ctx.fillStyle = '#9B9A97';
-  ctx.font = '11.5px "Geist Mono", monospace';
-  let x = padding;
-  for (let i = 0; i < headers.length; i++) {
-    let alignX = x + colW[i] / 2;
-    if (i === 2) { ctx.textAlign = 'left'; alignX = x + 14; }
-    else if (i === 5 || i === 6) { ctx.textAlign = 'right'; alignX = x + colW[i] - 14; }
-    else ctx.textAlign = 'center';
-    ctx.fillText(headers[i].toUpperCase(), alignX, y + colHeaderH / 2 + 4);
-    x += colW[i];
-  }
+  ctx.font = '500 14px "Geist Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText((state.homestay || 'Lượng').toUpperCase() + ' · MINH QUÝ', padding, y + 18);
+  ctx.textAlign = 'right';
+  ctx.fillText(new Date().toLocaleDateString('vi-VN'), W - padding, y + 18);
 
-  // line under headers
-  ctx.strokeStyle = '#EAEAEA';
-  ctx.beginPath();
-  ctx.moveTo(padding, y + colHeaderH);
-  ctx.lineTo(W - padding, y + colHeaderH);
-  ctx.stroke();
+  ctx.fillStyle = '#9F2F2D';
+  ctx.fillRect(padding, y + 34, 32, 2);
 
-  // ===== ROWS =====
-  y += colHeaderH;
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '600 32px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'left';
+  const titleLines = wrapText(ctx, title, W - 2 * padding, 2);
+  titleLines.forEach((line, i) => {
+    ctx.fillText(line, padding, y + 78 + i * 38);
+  });
+
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '14px "Geist Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${rows.length} mục thanh toán`, padding, y + headerH - 16);
+
+  y += headerH + 16;
+
+  // ===== RENTAL CARDS =====
   let total = 0;
-
-  // Pre-compute column x offsets
-  const cx = [padding];
-  for (let i = 0; i < colW.length; i++) cx.push(cx[i] + colW[i]);
-
   rows.forEach((r, idx) => {
-    // BG: white card
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(padding, y, W - 2 * padding, rowH);
-
-    // row divider
-    ctx.strokeStyle = '#EAEAEA';
-    ctx.beginPath();
-    ctx.moveTo(padding, y + rowH);
-    ctx.lineTo(W - padding, y + rowH);
-    ctx.stroke();
-
-    let nameText, dateRangeText, daysText, priceText, amtText;
-    let tagText = '', tagBg = '', tagInk = '';
-    let amtColor = '#2F3437';
-
-    if (r.kind === 'expense') {
-      nameText = r.expDesc || 'Chi phí phát sinh';
-      dateRangeText = 'Em Lượng chi · Minh Quý hoàn lại';
-      tagText = 'Ứng trước';
-      tagBg = '#FBF3DB'; tagInk = '#956400';
-      daysText = '1';
-      priceText = '−' + fmtMoney(r.expAmount || 0);
-      amtText = '−' + fmtMoney(r.expAmount || 0);
-      amtColor = '#9F2F2D';
-      total -= (r.expAmount || 0);
-    } else {
-      const b = bikeById(r.bikeId);
-      nameText = `${b.name}${r.bikeNote ? ' · ' + r.bikeNote : ''}`;
-      dateRangeText = `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`
-        + (r.customerName ? `   ·   khách: ${r.customerName}` : '');
-      if (r.status === 'planned') {
-        tagText = 'Dự kiến'; tagBg = '#E1F3FE'; tagInk = '#1F6C9F';
-        daysText = '—'; priceText = '—'; amtText = '—';
-        amtColor = '#9B9A97';
-      } else if (r.status === 'cancelled') {
-        tagText = 'Đã hủy'; tagBg = '#F7F6F3'; tagInk = '#787774';
-        daysText = '0'; priceText = '—'; amtText = '0';
-        amtColor = '#9B9A97';
-      } else if (r.status === 'paid') {
-        tagText = 'Đã TT'; tagBg = '#EDF3EC'; tagInk = '#346538';
-        daysText = String(r.days || 0).replace('.', ',');
-        priceText = fmtMoney(r.pricePerDay || 0);
-        amtText = fmtMoney(calcAmount(r));
-        amtColor = '#787774';
-      } else {
-        tagText = 'Cần TT'; tagBg = '#FDEBEC'; tagInk = '#9F2F2D';
-        daysText = String(r.days || 0).replace('.', ',');
-        priceText = fmtMoney(r.pricePerDay || 0);
-        const amt = calcAmount(r);
-        amtText = fmtMoney(amt);
-        total += amt;
-      }
-    }
-
-    // ===== STT =====
-    ctx.fillStyle = '#9B9A97';
-    ctx.font = '14px "Geist Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(String(idx + 1).padStart(2, '0'), cx[0] + colW[0] / 2, y + rowH / 2 + 5);
-
-    // ===== IMAGE CELL =====
-    const imgPad = 10;
-    const imgW = colW[1] - imgPad * 2;
-    const imgH = rowH - imgPad * 2 - 4;
-    const imgX = cx[1] + imgPad;
-    const imgY = y + imgPad + 2;
-
-    // image bg + border
-    ctx.save();
-    clipRoundedRect(ctx, imgX, imgY, imgW, imgH, 6);
-    ctx.fillStyle = '#F7F6F3';
-    ctx.fillRect(imgX, imgY, imgW, imgH);
-    if (r.kind === 'expense') {
-      // wrench icon
-      drawWrenchIcon(ctx, imgX + imgW / 2, imgY + imgH / 2, 22, '#9B9A97');
-    } else {
-      const img = imgCache[r.bikeId];
-      if (img) drawImageCover(ctx, img, imgX, imgY, imgW, imgH);
-    }
-    ctx.restore();
-    // border
-    ctx.strokeStyle = '#EAEAEA';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(imgX + 6, imgY);
-    ctx.arcTo(imgX + imgW, imgY, imgX + imgW, imgY + imgH, 6);
-    ctx.arcTo(imgX + imgW, imgY + imgH, imgX, imgY + imgH, 6);
-    ctx.arcTo(imgX, imgY + imgH, imgX, imgY, 6);
-    ctx.arcTo(imgX, imgY, imgX + imgW, imgY, 6);
-    ctx.closePath();
-    ctx.stroke();
-
-    // ===== LOAI XE (name + date range stacked) =====
-    ctx.fillStyle = '#2F3437';
-    ctx.font = '600 16px "Be Vietnam Pro", sans-serif';
-    ctx.textAlign = 'left';
-    let textToDraw = nameText;
-    const maxNameW = colW[2] - 28;
-    while (ctx.measureText(textToDraw).width > maxNameW && textToDraw.length > 8) {
-      textToDraw = textToDraw.slice(0, -2);
-    }
-    if (textToDraw !== nameText) textToDraw = textToDraw.slice(0, -1) + '…';
-    ctx.fillText(textToDraw, cx[2] + 14, y + rowH / 2 - 4);
-
-    // date range
-    ctx.fillStyle = '#787774';
-    ctx.font = '13px "Geist Mono", monospace';
-    ctx.fillText(dateRangeText, cx[2] + 14, y + rowH / 2 + 18);
-
-    // ===== TAG (pill) in Ghi chú column =====
-    if (tagText) {
-      ctx.font = '600 11px "Be Vietnam Pro", sans-serif';
-      const tagW = ctx.measureText(tagText.toUpperCase()).width + 20;
-      const tagH = 24;
-      const tagX = cx[3] + (colW[3] - tagW) / 2;
-      const tagY = y + (rowH - tagH) / 2;
-      ctx.fillStyle = tagBg;
-      roundRect(ctx, tagX, tagY, tagW, tagH, 12);
-      ctx.fill();
-      ctx.fillStyle = tagInk;
-      ctx.textAlign = 'center';
-      ctx.fillText(tagText.toUpperCase(), tagX + tagW / 2, tagY + tagH / 2 + 4);
-    }
-
-    // ===== TINH NGAY =====
-    ctx.fillStyle = '#2F3437';
-    ctx.font = '500 24px "Be Vietnam Pro", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(daysText, cx[4] + colW[4] / 2, y + rowH / 2 + 9);
-
-    // ===== GIA =====
-    ctx.fillStyle = '#787774';
-    ctx.font = '14px "Geist Mono", monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(priceText, cx[5] + colW[5] - 14, y + rowH / 2 + 5);
-
-    // ===== THANH TIEN =====
-    ctx.fillStyle = amtColor;
-    ctx.font = '600 22px "Be Vietnam Pro", sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(amtText, cx[6] + colW[6] - 14, y + rowH / 2 + 9);
-
-    y += rowH;
+    drawRentalCard(ctx, r, idx, padding, y, W - 2 * padding, cardH, imgCache);
+    total += calcAmount(r);
+    y += cardH + cardGap;
   });
 
   // ===== SUMMARY =====
-  y += 20;
-  ctx.fillStyle = '#9B9A97';
-  ctx.font = '11.5px "Geist Mono", monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText('CẦN THANH TOÁN', W - padding - 14, y + 18);
-
+  y += 8;
   ctx.fillStyle = '#2F3437';
-  ctx.font = '300 56px "Be Vietnam Pro", sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(fmtMoney(total), W - padding - 60, y + 70);
+  roundRect(ctx, padding, y, W - 2 * padding, summaryH, 16);
+  ctx.fill();
 
-  ctx.fillStyle = '#9B9A97';
-  ctx.font = '14px "Geist Mono", monospace';
-  ctx.textAlign = 'right';
-  ctx.fillText('đ', W - padding - 14, y + 70);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = '500 13px "Geist Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('CẦN THANH TOÁN', padding + 28, y + 40);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '300 64px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'left';
+  const totalText = fmtMoney(total);
+  ctx.fillText(totalText, padding + 28, y + 110);
+
+  const tw = ctx.measureText(totalText).width;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '500 16px "Be Vietnam Pro", sans-serif';
+  ctx.fillText('đ', padding + 28 + tw + 12, y + 110);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '13px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'left';
+  let subText = `Tổng ${rows.length} mục`;
+  const expCount = rows.filter(r => r.kind === 'expense').length;
+  if (expCount > 0) subText += ` · đã trừ ${expCount} khoản ứng trước`;
+  ctx.fillText(subText, padding + 28, y + summaryH - 28);
 
   y += summaryH;
 
   // ===== INVENTORY =====
   if (includeInv) {
-    // title
+    y += 28;
+
     ctx.fillStyle = '#2F3437';
-    ctx.font = '500 26px "Be Vietnam Pro", sans-serif';
+    ctx.font = '600 22px "Be Vietnam Pro", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('Xe rảnh tại homestay', padding, y + 26);
+    ctx.fillText('Xe rảnh tại homestay', padding, y + 28);
 
     let totalQty = 0;
     stockedBikes.forEach(b => { totalQty += (state.inventory[b.id] || 0); });
-
     ctx.fillStyle = '#9B9A97';
-    ctx.font = '11.5px "Geist Mono", monospace';
+    ctx.font = '14px "Geist Mono", monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(`${totalQty} XE · ${stockedBikes.length} LOẠI`, W - padding, y + 26);
+    ctx.fillText(`${totalQty} XE · ${stockedBikes.length} LOẠI`, W - padding, y + 28);
 
-    y += 50;
-
-    // 2-column grid: image | name | qty
-    const invColW = [110, W - 2 * padding - 110 - 180, 180];
-    const invCx = [padding];
-    for (let i = 0; i < invColW.length; i++) invCx.push(invCx[i] + invColW[i]);
-
-    // column header
-    ctx.fillStyle = '#9B9A97';
-    ctx.font = '11.5px "Geist Mono", monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('XE', invCx[0] + 8, y + invHeaderH / 2 + 4);
-    ctx.textAlign = 'right';
-    ctx.fillText('SỐ LƯỢNG', invCx[2] + invColW[2] - 14, y + invHeaderH / 2 + 4);
-
-    ctx.strokeStyle = '#EAEAEA';
-    ctx.beginPath();
-    ctx.moveTo(padding, y + invHeaderH);
-    ctx.lineTo(W - padding, y + invHeaderH);
-    ctx.stroke();
+    ctx.fillStyle = '#9F2F2D';
+    ctx.fillRect(padding, y + 48, 32, 2);
 
     y += invHeaderH;
 
     if (stockedBikes.length === 0) {
       ctx.fillStyle = '#9B9A97';
-      ctx.font = 'italic 16px "Be Vietnam Pro", sans-serif';
+      ctx.font = '500 15px "Be Vietnam Pro", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('— Không còn xe nào tại homestay —', W / 2, y + invRowH / 2 + 5);
-      y += invRowH;
+      ctx.fillText('— Không còn xe nào tại homestay —', W / 2, y + invCardH / 2 + 6);
+      y += invCardH;
+    } else {
+      stockedBikes.forEach(b => {
+        drawInvCard(ctx, b, state.inventory[b.id] || 0, padding, y, W - 2 * padding, invCardH, imgCache);
+        y += invCardH + cardGap;
+      });
     }
-
-    stockedBikes.forEach((b) => {
-      const q = state.inventory[b.id] || 0;
-
-      // image
-      const iPad = 10;
-      const iW = invColW[0] - iPad * 2;
-      const iH = invRowH - iPad * 2;
-      const iX = invCx[0] + iPad;
-      const iY = y + iPad;
-
-      ctx.save();
-      clipRoundedRect(ctx, iX, iY, iW, iH, 6);
-      ctx.fillStyle = '#F7F6F3';
-      ctx.fillRect(iX, iY, iW, iH);
-      const img = imgCache[b.id];
-      if (img) drawImageCover(ctx, img, iX, iY, iW, iH);
-      ctx.restore();
-      ctx.strokeStyle = '#EAEAEA';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(iX + 6, iY);
-      ctx.arcTo(iX + iW, iY, iX + iW, iY + iH, 6);
-      ctx.arcTo(iX + iW, iY + iH, iX, iY + iH, 6);
-      ctx.arcTo(iX, iY + iH, iX, iY, 6);
-      ctx.arcTo(iX, iY, iX + iW, iY, 6);
-      ctx.closePath();
-      ctx.stroke();
-
-      // name
-      ctx.fillStyle = '#2F3437';
-      ctx.font = '600 17px "Be Vietnam Pro", sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(b.name, invCx[1] + 4, y + invRowH / 2 + 6);
-
-      // qty
-      ctx.fillStyle = q > 0 ? '#2F3437' : '#9B9A97';
-      ctx.font = '600 30px "Be Vietnam Pro", sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(String(q), invCx[2] + invColW[2] - 14, y + invRowH / 2 + 12);
-
-      y += invRowH;
-
-      ctx.strokeStyle = '#EAEAEA';
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(W - padding, y);
-      ctx.stroke();
-    });
-
-    y += 16;
   }
 
   // ===== FOOT =====
+  y = H - padding - 20;
   ctx.fillStyle = '#9B9A97';
-  ctx.font = '11px "Geist Mono", monospace';
+  ctx.font = '500 12px "Geist Mono", monospace';
   ctx.textAlign = 'center';
-  ctx.fillText(`Sổ thuê xe · ${state.homestay || 'Lượng'}`, W / 2, H - padding);
+  ctx.fillText(`SỔ THUÊ XE · ${(state.homestay || 'LƯỢNG').toUpperCase()}`, W / 2, y);
 
   document.getElementById('exportActions').style.display = 'grid';
 }
+
+function wrapText(ctx, text, maxW, maxLines) {
+  const words = text.split(' ');
+  const lines = [];
+  let current = '';
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    const test = current ? current + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && current) {
+      lines.push(current);
+      current = w;
+      if (lines.length >= maxLines - 1) {
+        const rest = words.slice(i).join(' ');
+        let truncated = rest;
+        while (ctx.measureText(truncated + '…').width > maxW && truncated.length > 3) {
+          truncated = truncated.slice(0, -1);
+        }
+        if (truncated.length < rest.length) truncated += '…';
+        lines.push(truncated);
+        return lines;
+      }
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.slice(0, maxLines);
+}
+
+function drawRentalCard(ctx, r, idx, x, y, w, h, imgCache) {
+  let nameText, dateText, customerText, daysLabel, amtText, amtColor = '#2F3437';
+  let tagText, tagBg, tagInk, accentColor = '#EAEAEA';
+
+  if (r.kind === 'expense') {
+    nameText = r.expDesc || 'Chi phí phát sinh';
+    dateText = 'Em Lượng chi · Minh Quý hoàn lại';
+    customerText = '';
+    daysLabel = '';
+    amtText = '−' + fmtMoney(r.expAmount || 0);
+    amtColor = '#9F2F2D';
+    tagText = 'Ứng trước'; tagBg = '#FBF3DB'; tagInk = '#956400';
+    accentColor = '#956400';
+  } else {
+    const b = bikeById(r.bikeId);
+    nameText = b.name + (r.bikeNote ? ' · ' + r.bikeNote : '');
+    dateText = `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`;
+    customerText = r.customerName ? `Khách: ${r.customerName}` : '';
+    const days = String(r.days || 0).replace('.', ',');
+    daysLabel = `${days} ngày × ${fmtMoney(r.pricePerDay || 0)}`;
+    if (r.status === 'planned') {
+      tagText = 'Dự kiến'; tagBg = '#E1F3FE'; tagInk = '#1F6C9F';
+      amtText = '—'; amtColor = '#9B9A97'; accentColor = '#1F6C9F';
+    } else if (r.status === 'cancelled') {
+      tagText = 'Đã hủy'; tagBg = '#F7F6F3'; tagInk = '#787774';
+      amtText = '0'; amtColor = '#9B9A97'; accentColor = '#9B9A97';
+    } else if (r.status === 'paid') {
+      tagText = 'Đã TT'; tagBg = '#EDF3EC'; tagInk = '#346538';
+      amtText = fmtMoney(calcAmount(r)); amtColor = '#787774'; accentColor = '#346538';
+    } else {
+      tagText = 'Cần TT'; tagBg = '#FDEBEC'; tagInk = '#9F2F2D';
+      amtText = fmtMoney(calcAmount(r));
+      accentColor = '#9F2F2D';
+    }
+  }
+
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#EAEAEA';
+  ctx.lineWidth = 1;
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.stroke();
+
+  // Left accent stripe
+  ctx.save();
+  ctx.beginPath();
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.clip();
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(x, y, 4, h);
+  ctx.restore();
+
+  // Image
+  const imgSize = 96;
+  const imgX = x + 18;
+  const imgY = y + (h - imgSize) / 2;
+
+  ctx.save();
+  clipRoundedRect(ctx, imgX, imgY, imgSize, imgSize, 10);
+  ctx.fillStyle = '#F7F6F3';
+  ctx.fillRect(imgX, imgY, imgSize, imgSize);
+  if (r.kind === 'expense') {
+    drawWrenchIcon(ctx, imgX + imgSize / 2, imgY + imgSize / 2, 36, '#956400');
+  } else {
+    const img = imgCache[r.bikeId];
+    if (img) drawImageCover(ctx, img, imgX, imgY, imgSize, imgSize);
+  }
+  ctx.restore();
+
+  // STT
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '500 12px "Geist Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('#' + String(idx + 1).padStart(2, '0'), x + w - 18, y + 24);
+
+  // Tag pill
+  ctx.font = '600 11px "Be Vietnam Pro", sans-serif';
+  const tagW = ctx.measureText(tagText.toUpperCase()).width + 18;
+  const tagH = 22;
+  const tagX = x + w - 18 - tagW;
+  const tagY = y + 34;
+  ctx.fillStyle = tagBg;
+  roundRect(ctx, tagX, tagY, tagW, tagH, 11);
+  ctx.fill();
+  ctx.fillStyle = tagInk;
+  ctx.textAlign = 'center';
+  ctx.fillText(tagText.toUpperCase(), tagX + tagW / 2, tagY + tagH / 2 + 4);
+
+  // Right column
+  const colX = imgX + imgSize + 18;
+  const colW = x + w - colX - 16;
+
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '600 18px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'left';
+  let nm = nameText;
+  const nameMaxW = colW - tagW - 36;
+  while (ctx.measureText(nm).width > nameMaxW && nm.length > 6) nm = nm.slice(0, -2);
+  if (nm !== nameText) nm = nm.slice(0, -1) + '…';
+  ctx.fillText(nm, colX, y + 32);
+
+  ctx.fillStyle = '#787774';
+  ctx.font = '500 13.5px "Geist Mono", monospace';
+  ctx.fillText(dateText, colX, y + 56);
+
+  if (customerText) {
+    ctx.fillStyle = '#787774';
+    ctx.font = '500 13px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(customerText, colX, y + 78);
+  }
+
+  if (daysLabel) {
+    ctx.fillStyle = '#9B9A97';
+    ctx.font = '500 12px "Geist Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(daysLabel, colX, y + h - 16);
+  }
+
+  // Amount
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '500 10px "Geist Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('VND', x + w - 18, y + h - 36);
+
+  ctx.fillStyle = amtColor;
+  ctx.font = '700 24px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(amtText, x + w - 18, y + h - 14);
+}
+
+function drawInvCard(ctx, b, qty, x, y, w, h, imgCache) {
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#EAEAEA';
+  ctx.lineWidth = 1;
+  roundRect(ctx, x, y, w, h, 12);
+  ctx.stroke();
+
+  const imgSize = 68;
+  const imgX = x + 16;
+  const imgY = y + (h - imgSize) / 2;
+
+  ctx.save();
+  clipRoundedRect(ctx, imgX, imgY, imgSize, imgSize, 8);
+  ctx.fillStyle = '#F7F6F3';
+  ctx.fillRect(imgX, imgY, imgSize, imgSize);
+  const img = imgCache[b.id];
+  if (img) drawImageCover(ctx, img, imgX, imgY, imgSize, imgSize);
+  ctx.restore();
+
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '600 17px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(b.name, imgX + imgSize + 16, y + h / 2 - 2);
+
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '500 11px "Geist Mono", monospace';
+  ctx.fillText('TỒN KHO', imgX + imgSize + 16, y + h / 2 + 18);
+
+  ctx.fillStyle = '#9B9A97';
+  ctx.font = '500 11px "Geist Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('XE', x + w - 24, y + h / 2 - 12);
+
+  ctx.fillStyle = '#2F3437';
+  ctx.font = '300 44px "Be Vietnam Pro", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(String(qty), x + w - 24, y + h / 2 + 18);
+}
+
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
