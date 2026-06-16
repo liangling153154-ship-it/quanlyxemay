@@ -268,8 +268,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
   width: 100%; height: 100%; object-fit: cover;
 }
 .rental.expense .r-thumb { background: var(--yellow-bg); border-color: var(--yellow-bg); color: var(--yellow-ink); }
-.rental.paid .r-thumb img,
-.rental.cancelled .r-thumb img { opacity: 0.4; filter: grayscale(0.6); }
+.rental.fee .r-thumb { background: var(--red-bg); border-color: var(--red-bg); color: var(--red-ink); }
 
 .rental .info { min-width: 0; }
 .rental .customer {
@@ -293,8 +292,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
   flex: 1; min-width: 0;
   line-height: 1.25;
 }
-.rental.paid .bike-name { color: var(--ink-dim); }
-.rental.cancelled .bike-name { color: var(--ink-mute); text-decoration: line-through; text-decoration-thickness: 1px; }
 
 .rental .meta-row {
   font-family: 'Geist Mono', monospace;
@@ -315,8 +312,11 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
   font-weight: 600;
 }
 .rental.expense .amount { color: var(--red-ink); }
-.rental.paid .amount { color: var(--ink-dim); }
+.rental.renting .amount { color: var(--ink-dim); }
+.rental.planned .amount { color: var(--ink-dim); }
 .rental.cancelled .amount { color: var(--ink-mute); }
+.rental.cancelled .bike-name { color: var(--ink-mute); text-decoration: line-through; text-decoration-thickness: 1px; }
+.rental.cancelled .r-thumb img { opacity: 0.4; filter: grayscale(0.6); }
 .rental .amount-sub {
   font-family: 'Geist Mono', monospace;
   font-size: 11px;
@@ -559,6 +559,17 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
   font-weight: 500;
 }
 .cfg-card input:focus { outline: none; }
+.cfg-card .hint {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-mute);
+}
+.cfg-card input#sheetsUrl {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  word-break: break-all;
+}
 
 .bike-row {
   display: grid;
@@ -715,6 +726,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
   gap: 4px;
 }
 .segmented.cols-2 { grid-template-columns: 1fr 1fr; }
+.segmented.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .segmented.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .seg-opt {
   padding: 12px 6px;
@@ -779,44 +791,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
 }
 
 /* ============ EXPORT MODAL ============ */
-.check-list {
-  background: var(--bg-card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  overflow: hidden;
-  max-height: 44vh;
-  overflow-y: auto;
-}
-.check-item {
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  cursor: pointer;
-}
-.check-item:last-child { border-bottom: none; }
-.check-item input[type=checkbox] {
-  width: 22px; height: 22px;
-  accent-color: var(--ink);
-}
-.check-item .ci-info { font-size: 14.5px; color: var(--ink); line-height: 1.45; }
-.check-item .ci-amount {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  color: var(--ink);
-}
-.check-item.expense .ci-amount { color: var(--red-ink); }
 
 #exportCanvas {
   max-width: 100%;
+  width: 100%;
   border: 1px solid var(--line);
   border-radius: 10px;
-  margin-top: 12px;
-  display: none;
+  display: block;
 }
 .export-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 
@@ -880,12 +861,12 @@ kbd {
         <div class="mv" id="cntUnpaid">0</div>
       </div>
       <div>
-        <div class="mk">Dự kiến</div>
-        <div class="mv" id="cntPlanned">0</div>
+        <div class="mk">Đang thuê</div>
+        <div class="mv" id="cntRenting">0</div>
       </div>
       <div>
-        <div class="mk">Ứng trước</div>
-        <div class="mv" id="cntAdvanced">0</div>
+        <div class="mk">Dự kiến</div>
+        <div class="mv" id="cntPlanned">0</div>
       </div>
     </div>
   </div>
@@ -896,11 +877,11 @@ kbd {
   </div>
 
   <div class="filter-bar">
-    <button class="filter-chip active" data-filter="active" onclick="setFilter('active')">Đang mở</button>
-    <button class="filter-chip" data-filter="all" onclick="setFilter('all')">Tất cả</button>
+    <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">Tất cả</button>
     <button class="filter-chip" data-filter="unpaid" onclick="setFilter('unpaid')">Cần thanh toán</button>
+    <button class="filter-chip" data-filter="renting" onclick="setFilter('renting')">Đang thuê</button>
     <button class="filter-chip" data-filter="planned" onclick="setFilter('planned')">Dự kiến</button>
-    <button class="filter-chip" data-filter="paid" onclick="setFilter('paid')">Đã thanh toán</button>
+    <button class="filter-chip" data-filter="cancelled" onclick="setFilter('cancelled')">Đã hủy</button>
   </div>
 
   <div id="rentalList"></div>
@@ -937,6 +918,18 @@ kbd {
     <label class="k">Tên homestay</label>
     <input id="homestayName" placeholder="VD: Homestay Lượng" oninput="saveHomestayName()">
   </div>
+
+  <div class="section-head">
+    <h2>Google Sheets</h2>
+    <div class="s-meta" id="sheetsStatus">Chưa kết nối</div>
+  </div>
+  <div class="cfg-card">
+    <label class="k">URL Web App (Apps Script)</label>
+    <input id="sheetsUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveSheetsUrl()">
+    <div class="hint" style="margin-top:8px;">Dán URL kết thúc bằng <strong>/exec</strong>. Hướng dẫn trong file google-apps-script.gs.</div>
+  </div>
+  <button class="btn" onclick="testSheets()">Kiểm tra kết nối</button>
+  <button class="btn" onclick="loadRentalsFromSheets()">Tải lại dữ liệu từ Sheets</button>
 
   <div class="section-head">
     <h2>Danh mục xe</h2>
@@ -1010,9 +1003,10 @@ kbd {
 
       <div class="form-row">
         <label>Loại</label>
-        <div class="segmented cols-2" id="kindPicker">
+        <div class="segmented cols-3" id="kindPicker">
           <button class="seg-opt selected" data-kind="rental" onclick="selectKind('rental')">Thuê xe</button>
-          <button class="seg-opt" data-kind="expense" onclick="selectKind('expense')">Chi phí phát sinh</button>
+          <button class="seg-opt" data-kind="fee" onclick="selectKind('fee')">Phát sinh</button>
+          <button class="seg-opt" data-kind="expense" onclick="selectKind('expense')">Em Lượng chi</button>
         </div>
       </div>
 
@@ -1038,31 +1032,35 @@ kbd {
             <input type="date" id="dateFrom">
           </div>
           <div class="form-row">
-            <label>Đến hết ngày</label>
-            <input type="date" id="dateTo">
-          </div>
-        </div>
-
-        <div class="row2">
-          <div class="form-row">
-            <label>Số ngày</label>
-            <input type="number" id="days" step="0.5" min="0">
-            <div class="hint">0.5 = nửa ngày · giá ×50%</div>
-          </div>
-          <div class="form-row">
             <label>Giá / ngày</label>
             <input type="number" id="pricePerDay" step="1000">
           </div>
         </div>
 
+        <div class="row2" id="closeFields">
+          <div class="form-row">
+            <label>Đến hết ngày</label>
+            <input type="date" id="dateTo">
+          </div>
+          <div class="form-row">
+            <label>Số ngày</label>
+            <input type="number" id="days" step="0.5" min="0">
+            <div class="hint">0.5 = nửa ngày · giá ×50%</div>
+          </div>
+        </div>
+        <div class="hint" id="rentingNote" style="display:none;margin:-6px 4px 18px;">
+          Khách đang thuê, chưa biết ngày trả. Số tiền là <strong>tạm tính đến hôm nay</strong>. Khi khách trả xe, chuyển sang <strong>Cần TT</strong> để chốt ngày và tiền.
+        </div>
+
         <div class="form-row">
           <label>Trạng thái</label>
           <div class="segmented cols-4">
-            <button class="seg-opt selected" data-status="unpaid" onclick="selectStatus('unpaid')">Cần TT</button>
             <button class="seg-opt" data-status="planned" onclick="selectStatus('planned')">Dự kiến</button>
-            <button class="seg-opt" data-status="paid" onclick="selectStatus('paid')">Đã TT</button>
+            <button class="seg-opt" data-status="renting" onclick="selectStatus('renting')">Đang thuê</button>
+            <button class="seg-opt selected" data-status="unpaid" onclick="selectStatus('unpaid')">Cần TT</button>
             <button class="seg-opt" data-status="cancelled" onclick="selectStatus('cancelled')">Hủy</button>
           </div>
+          <div class="hint">Khách trả xe → <strong>Cần TT</strong> để chốt tiền phải trả Minh Quý · <strong>Hủy</strong> cho lượt dự kiến không thuê nữa</div>
         </div>
       </div>
 
@@ -1074,7 +1072,7 @@ kbd {
         <div class="form-row">
           <label>Số tiền</label>
           <input type="number" id="expAmount" step="1000">
-          <div class="hint">Bạn ứng trước · sẽ trừ vào số phải trả Minh Quý</div>
+          <div class="hint" id="expHint">Em Lượng chi · sẽ trừ vào số phải trả Minh Quý</div>
         </div>
       </div>
 
@@ -1095,28 +1093,28 @@ kbd {
     <div class="modal-body">
       <div class="form-row">
         <label>Tiêu đề báo cáo</label>
-        <input id="exportTitle" placeholder="VD: Quyết toán xe ngày 28/4">
-      </div>
-
-      <div class="form-row">
-        <label>Chọn lượt đưa vào báo cáo</label>
-        <div class="check-list" id="exportCheckList"></div>
+        <input id="exportTitle" placeholder="VD: Quyết toán xe ngày 28/4" oninput="handleGenerate()">
       </div>
 
       <div class="form-row">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;letter-spacing:0;font-family:inherit;font-size:13.5px;color:var(--ink);">
-          <input type="checkbox" id="includeInventory" checked style="width:18px;height:18px;accent-color:var(--ink);">
+          <input type="checkbox" id="includeInventory" checked style="width:18px;height:18px;accent-color:var(--ink);" onchange="handleGenerate()">
           Kèm bảng xe rảnh tại homestay
         </label>
       </div>
 
-      <button class="btn btn-primary" id="generateBtn" onclick="handleGenerate()">Tạo ảnh báo cáo</button>
-
-      <canvas id="exportCanvas"></canvas>
+      <div class="form-row" style="margin-bottom:10px;">
+        <label>Xem trước</label>
+        <div id="exportEmpty" class="empty" style="display:none;padding:32px 24px;">
+          <div class="e-title">Chưa có mục nào cần thanh toán</div>
+          <div class="e-sub">Chuyển lượt sang trạng thái “Cần TT” để đưa vào báo cáo</div>
+        </div>
+        <canvas id="exportCanvas"></canvas>
+      </div>
 
       <div class="export-actions" id="exportActions" style="display:none;">
         <button class="btn btn-primary" onclick="downloadReport()">Tải ảnh</button>
-        <button class="btn" onclick="markSelectedPaid()">Đánh dấu đã TT</button>
+        <button class="btn btn-danger" onclick="deleteSelectedSettled()">Xóa mục đã chốt</button>
       </div>
       <button class="btn btn-ghost" onclick="closeModal('exportModal')">Đóng</button>
     </div>
@@ -1140,24 +1138,194 @@ const DEFAULT_BIKES = [
   { id: 'xr',       name: 'XR',         img: 'bikes/xr.jpg',         price: 200000 },
 ];
 
+// Web App đã deploy từ google-apps-script.gs (đổi được trong Cài đặt)
+const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw9-M_UC1mmToFuR4zCp3HDtz81ZPD0C-NckgNvAeBsJ1JrHOak9aBDnh8_CD827nal/exec';
+
+// Lượt thuê còn sót trong localStorage từ bản cũ (trước khi chuyển nguồn sang Sheets)
+let legacyRentals = [];
+
 let state = loadState();
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = migrateState(JSON.parse(raw));
+      // Rentals KHÔNG lưu offline — nguồn duy nhất là Google Sheets.
+      legacyRentals = parsed.rentals || [];
+      parsed.rentals = [];
+      return parsed;
+    }
   } catch (e) {}
   return {
     homestay: 'Lượng',
     bikes: DEFAULT_BIKES,
     rentals: [],
     inventory: {},
+    sheetsUrl: DEFAULT_SHEETS_URL,
   };
 }
 
+// Chỉ lưu cấu hình (homestay, xe, kho, URL). Rentals nằm trên Google Sheets.
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const copy = Object.assign({}, state);
+  delete copy.rentals;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(copy));
 }
+
+// Đưa dữ liệu cũ về mô hình mới (planned / renting / unpaid / cancelled)
+// Trạng thái 'paid' cũ không còn — chuyển về 'unpaid' để hiện ra cho chốt lại
+function migrateState(s) {
+  if (s && Array.isArray(s.rentals)) {
+    s.rentals.forEach(r => {
+      if (r.status === 'paid') r.status = 'unpaid';
+    });
+  }
+  // Dữ liệu cũ chưa có cấu hình Sheets → dùng URL mặc định
+  if (s && s.sheetsUrl === undefined) s.sheetsUrl = DEFAULT_SHEETS_URL;
+  return s;
+}
+
+// ============ GOOGLE SHEETS SYNC ============
+const STATUS_LABEL = {
+  planned: 'Dự kiến', renting: 'Đang thuê', unpaid: 'Cần TT', cancelled: 'Đã hủy',
+};
+
+// Chuyển 1 lượt thành object khớp HEADERS trong google-apps-script.gs.
+// Cột json giữ dữ liệu gốc để app đọc lại nguyên vẹn.
+function rowForSheet(r) {
+  let row;
+  if (r.kind === 'expense' || r.kind === 'fee') {
+    row = {
+      id: r.id,
+      ngay_chot: fmtDateVN(todayISO()),
+      loai: r.kind === 'fee' ? 'Phát sinh' : 'Em Lượng chi',
+      trang_thai: '',
+      xe: '', ghi_chu_xe: '', khach: '',
+      tu_ngay: '', den_ngay: '', so_ngay: '', gia_ngay: '',
+      thanh_tien: calcAmount(r),
+      mo_ta_chi_phi: r.expDesc || '',
+    };
+  } else {
+    const b = bikeById(r.bikeId);
+    row = {
+      id: r.id,
+      ngay_chot: fmtDateVN(todayISO()),
+      loai: 'Thuê xe',
+      trang_thai: STATUS_LABEL[r.status] || r.status || '',
+      xe: b.name,
+      ghi_chu_xe: r.bikeNote || '',
+      khach: r.customerName || '',
+      tu_ngay: fmtDateVN(r.dateFrom),
+      den_ngay: r.status === 'renting' ? '(đang thuê)' : fmtDateVN(r.dateTo),
+      so_ngay: r.status === 'renting' ? rentalDays(r) : (r.days || 0),
+      gia_ngay: r.pricePerDay || 0,
+      thanh_tien: calcAmount(r),
+      mo_ta_chi_phi: '',
+    };
+  }
+  row.json = JSON.stringify(r);
+  return row;
+}
+
+// Nạp toàn bộ lượt từ Google Sheets (gọi khi mở app hoặc bấm Tải lại)
+let rentalsLoaded = false;
+async function loadRentalsFromSheets() {
+  const countEl = document.getElementById('ledgerCount');
+  countEl.textContent = 'Đang tải…';
+  try {
+    const data = await postToSheets({ action: 'list' });
+    state.rentals = migrateState({ rentals: data.rows || [] }).rentals;
+    rentalsLoaded = true;
+    renderHome();
+    flashSheets('Đã tải từ Sheets ✓');
+    // Lần đầu chuyển đổi: còn lượt cũ trên máy mà Sheets trống → đẩy lên
+    if (state.rentals.length === 0 && legacyRentals.length > 0) {
+      if (confirm(`Tìm thấy ${legacyRentals.length} lượt lưu trên máy từ bản cũ. Đẩy lên Google Sheets?`)) {
+        for (const r of legacyRentals) {
+          try { await postToSheets({ action: 'upsert', row: rowForSheet(r) }); } catch (e) {}
+        }
+        state.rentals = legacyRentals;
+        renderHome();
+      }
+      legacyRentals = [];
+    }
+  } catch (e) {
+    countEl.textContent = 'Lỗi tải';
+    document.getElementById('rentalList').innerHTML = `<div class="empty">
+      <div class="e-title">Không tải được dữ liệu</div>
+      <div class="e-sub">${escapeHtml(e.message)}</div>
+      <button class="btn" style="max-width:220px;margin:16px auto 0;" onclick="loadRentalsFromSheets()">Thử lại</button>
+    </div>`;
+  }
+}
+
+// Gửi POST tới GAS. Dùng text/plain để tránh CORS preflight.
+async function postToSheets(payload) {
+  const url = (state.sheetsUrl || '').trim();
+  if (!url) throw new Error('Chưa cấu hình Google Sheets URL trong Cài đặt');
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    redirect: 'follow',
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json().catch(() => ({ ok: false, error: 'Phản hồi không hợp lệ' }));
+  if (!data.ok) throw new Error(data.error || 'Lỗi không rõ từ Sheets');
+  return data;
+}
+
+// Đẩy 1 lượt (upsert). Báo lỗi rõ nếu thất bại.
+async function syncRow(r) {
+  try {
+    await postToSheets({ action: 'upsert', row: rowForSheet(r) });
+    flashSheets('Đã lưu lên Sheets ✓');
+  } catch (e) {
+    alert('LỖI: chưa lưu được lên Google Sheets!\n' + e.message + '\n\nMục này sẽ MẤT khi đóng app nếu không lưu được. Kiểm tra mạng rồi sửa lại lượt này để lưu lần nữa.');
+  }
+}
+
+// Xóa 1 lượt khỏi Sheets theo id.
+async function syncDelete(id) {
+  try {
+    await postToSheets({ action: 'delete', id });
+  } catch (e) {
+    alert('Lỗi xóa trên Google Sheets:\n' + e.message + '\n\nDòng có thể vẫn còn trên Sheets, kiểm tra lại.');
+  }
+}
+
+// Hiện trạng thái ngắn ở mục Cài đặt
+function flashSheets(msg) {
+  const el = document.getElementById('sheetsStatus');
+  if (!el) return;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.textContent = state.sheetsUrl ? 'Đã kết nối' : 'Chưa kết nối';
+  }, 2500);
+}
+
+function saveSheetsUrl() {
+  state.sheetsUrl = document.getElementById('sheetsUrl').value.trim();
+  saveState();
+  document.getElementById('sheetsStatus').textContent =
+    state.sheetsUrl ? 'Đã kết nối' : 'Chưa kết nối';
+}
+
+async function testSheets() {
+  if (!state.sheetsUrl) { alert('Hãy dán URL Web App trước.'); return; }
+  flashSheets('Đang kiểm tra…');
+  try {
+    await postToSheets({ action: 'ping' });
+    flashSheets('Kết nối OK ✓');
+    alert('Kết nối Google Sheets thành công.');
+  } catch (e) {
+    flashSheets('Lỗi kết nối');
+    alert('Không kết nối được:\n' + e.message);
+  }
+}
+
 
 // ============ UTILS ============
 function fmtMoney(n) {
@@ -1169,6 +1337,12 @@ function fmtDate(iso) {
   if (!iso) return '...';
   const [y, m, d] = iso.split('-');
   return `${parseInt(d)}/${parseInt(m)}`;
+}
+// dd/mm/yyyy cho các cột hiển thị trên Google Sheets
+function fmtDateVN(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 }
 function calcDays(from, to) {
   if (!from || !to) return 0;
@@ -1183,9 +1357,17 @@ function escapeHtml(s) {
 }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function calcAmount(r) {
-  if (r.kind === 'expense') return -(r.expAmount || 0);
+  if (r.kind === 'expense') return -(r.expAmount || 0); // ứng trước → trừ
+  if (r.kind === 'fee') return (r.expAmount || 0);      // phát sinh → cộng
   if (r.status === 'cancelled') return 0;
-  return Math.round((r.days || 0) * (r.pricePerDay || 0));
+  return Math.round((rentalDays(r)) * (r.pricePerDay || 0));
+}
+// Số ngày dùng để tính tiền. Đang thuê: tạm tính từ ngày thuê đến hôm nay.
+function rentalDays(r) {
+  if (r.status === 'renting') {
+    return Math.max(1, calcDays(r.dateFrom, todayISO()));
+  }
+  return r.days || 0;
 }
 
 // ============ NAV ============
@@ -1200,7 +1382,7 @@ function setPage(p) {
 }
 
 // ============ HOME ============
-let currentFilter = 'active';
+let currentFilter = 'all';
 function setFilter(f) {
   currentFilter = f;
   document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
@@ -1212,9 +1394,7 @@ function renderHome() {
   const list = document.getElementById('rentalList');
   let rentals = [...state.rentals];
 
-  if (currentFilter === 'active') {
-    rentals = rentals.filter(r => r.status === 'unpaid' || r.status === 'planned');
-  } else if (currentFilter !== 'all') {
+  if (currentFilter !== 'all') {
     rentals = rentals.filter(r => r.status === currentFilter);
   }
 
@@ -1227,7 +1407,7 @@ function renderHome() {
   document.getElementById('ledgerCount').textContent = `${rentals.length} mục`;
 
   if (rentals.length === 0) {
-    list.innerHTML = `<div class="empty fade-in">
+    list.innerHTML = rentalsLoaded ? `<div class="empty fade-in">
       <div class="e-icon">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14M5 12h14"/>
@@ -1235,32 +1415,62 @@ function renderHome() {
       </div>
       <div class="e-title">Chưa có mục nào</div>
       <div class="e-sub">Nhấn nút <kbd>+</kbd> ở góc dưới để thêm lượt thuê</div>
+    </div>` : `<div class="empty fade-in">
+      <div class="e-title">Đang tải từ Google Sheets…</div>
+      <div class="e-sub">Cần kết nối mạng</div>
     </div>`;
   } else {
     list.innerHTML = `<div class="ledger">${rentals.map((r, i) => renderRental(r, i)).join('')}</div>`;
   }
 
   // Summary
-  const unpaidList = state.rentals.filter(r => r.status === 'unpaid' || r.kind === 'expense');
+  const unpaidList = state.rentals.filter(r => r.status === 'unpaid' || r.kind === 'expense' || r.kind === 'fee');
   const totalUnpaid = unpaidList.reduce((s, r) => s + calcAmount(r), 0);
   document.getElementById('totalUnpaid').innerHTML =
     fmtMoney(totalUnpaid) + '<span class="unit">đ</span>';
 
-  const cntU = state.rentals.filter(r => r.status === 'unpaid' && r.kind !== 'expense').length;
+  const cntU = state.rentals.filter(r => r.status === 'unpaid' && r.kind === 'rental').length;
+  const cntR = state.rentals.filter(r => r.status === 'renting').length;
   const cntP = state.rentals.filter(r => r.status === 'planned').length;
+  const cntF = state.rentals.filter(r => r.kind === 'fee').length;
   const cntA = state.rentals.filter(r => r.kind === 'expense').length;
 
   document.getElementById('cntUnpaid').textContent = cntU;
+  document.getElementById('cntRenting').textContent = cntR;
   document.getElementById('cntPlanned').textContent = cntP;
-  document.getElementById('cntAdvanced').textContent = cntA;
 
   const sub = document.getElementById('totalSubtitle');
-  if (cntU + cntA === 0) sub.textContent = 'Chưa có lượt nào cần thanh toán';
-  else sub.textContent = `${cntU} lượt thuê chưa thanh toán${cntA > 0 ? ` · trừ ${cntA} khoản ứng trước` : ''}`;
+  if (cntU + cntF + cntA === 0) sub.textContent = 'Chưa có lượt nào cần thanh toán';
+  else {
+    let parts = [`${cntU} lượt cần thanh toán`];
+    if (cntF > 0) parts.push(`cộng ${cntF} phát sinh`);
+    if (cntA > 0) parts.push(`trừ ${cntA} khoản em Lượng chi`);
+    sub.textContent = parts.join(' · ');
+  }
 }
 
 function renderRental(r, idx) {
   const styleDelay = `--i:${idx}`;
+  if (r.kind === 'fee') {
+    return `<div class="rental fee" style="${styleDelay}" onclick="editRental('${r.id}')">
+      <div class="r-thumb">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </div>
+      <div class="info">
+        <div class="head-row">
+          <span class="bike-name">${escapeHtml(r.expDesc || 'Chi phí phát sinh')}</span>
+          <span class="tag tag-red">Phát sinh</span>
+        </div>
+        <div class="meta-row">Trả thêm cho Minh Quý</div>
+      </div>
+      <div class="amount-block">
+        <div class="amount">+${fmtMoney(r.expAmount || 0)}</div>
+        <div class="amount-sub">VND</div>
+      </div>
+    </div>`;
+  }
   if (r.kind === 'expense') {
     return `<div class="rental expense" style="${styleDelay}" onclick="editRental('${r.id}')">
       <div class="r-thumb">
@@ -1271,9 +1481,9 @@ function renderRental(r, idx) {
       <div class="info">
         <div class="head-row">
           <span class="bike-name">${escapeHtml(r.expDesc || 'Chi phí phát sinh')}</span>
-          <span class="tag tag-yellow">Ứng trước</span>
+          <span class="tag tag-yellow">Em Lượng chi</span>
         </div>
-        <div class="meta-row">Bạn ứng trước, Minh Quý hoàn lại</div>
+        <div class="meta-row">Trừ vào số phải trả Minh Quý</div>
       </div>
       <div class="amount-block">
         <div class="amount">−${fmtMoney(r.expAmount || 0)}</div>
@@ -1286,12 +1496,20 @@ function renderRental(r, idx) {
   const amount = calcAmount(r);
   const tagMap = {
     unpaid: { text: 'Cần TT', cls: 'tag-red' },
+    renting: { text: 'Đang thuê', cls: 'tag-green' },
     planned: { text: 'Dự kiến', cls: 'tag-blue' },
-    paid: { text: 'Đã TT', cls: 'tag-green' },
     cancelled: { text: 'Đã hủy', cls: 'tag-gray' },
   };
   const tag = tagMap[r.status] || tagMap.unpaid;
-  const daysStr = String(r.days || 0).replace('.', ',');
+  const isRenting = r.status === 'renting';
+  const daysNum = isRenting ? rentalDays(r) : (r.days || 0);
+  const daysStr = String(daysNum).replace('.', ',');
+  const dateRange = isRenting
+    ? `${fmtDate(r.dateFrom)} → nay`
+    : `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`;
+  const daysPart = isRenting
+    ? `${daysStr} ngày (tạm) × ${fmtMoney(r.pricePerDay || 0)}`
+    : `${daysStr} ngày × ${fmtMoney(r.pricePerDay || 0)}`;
   const customerLine = r.customerName
     ? `<div class="customer">${escapeHtml(r.customerName)}</div>`
     : '';
@@ -1303,15 +1521,15 @@ function renderRental(r, idx) {
         <span class="tag ${tag.cls}">${tag.text}</span>
       </div>
       <div class="meta-row">
-        ${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}
+        ${dateRange}
         <span class="dot">·</span>
-        ${daysStr} ngày × ${fmtMoney(r.pricePerDay || 0)}
+        ${daysPart}
       </div>
       ${customerLine}
     </div>
     <div class="amount-block">
       <div class="amount">${r.status === 'cancelled' ? '0' : fmtMoney(amount)}</div>
-      <div class="amount-sub">VND</div>
+      <div class="amount-sub">${r.status === 'unpaid' ? 'VND' : r.status === 'cancelled' ? 'ĐÃ HỦY' : 'TẠM TÍNH'}</div>
     </div>
   </div>`;
 }
@@ -1325,7 +1543,7 @@ let selectedKind = 'rental';
 function openRentalModal() {
   editingId = null;
   selectedBikeId = state.bikes[0]?.id;
-  selectedStatus = 'unpaid';
+  selectedStatus = 'renting';
   selectedKind = 'rental';
   document.getElementById('rentalModalTitle').textContent = 'Thêm lượt thuê';
   document.getElementById('deleteRentalBtn').style.display = 'none';
@@ -1372,13 +1590,30 @@ function updateKindUI() {
     el.classList.toggle('selected', el.dataset.kind === selectedKind);
   });
   document.getElementById('rentalFields').style.display = selectedKind === 'rental' ? 'block' : 'none';
-  document.getElementById('expenseFields').style.display = selectedKind === 'expense' ? 'block' : 'none';
+  document.getElementById('expenseFields').style.display = selectedKind === 'rental' ? 'none' : 'block';
+  document.getElementById('expHint').textContent = selectedKind === 'fee'
+    ? 'Chi phí phát sinh phải trả thêm cho Minh Quý · cộng vào tổng'
+    : 'Em Lượng chi · sẽ trừ vào số phải trả Minh Quý';
 }
 function selectStatus(s) { selectedStatus = s; updateStatusUI(); }
 function updateStatusUI() {
   document.querySelectorAll('#rentalFields .seg-opt').forEach(el => {
     if (el.dataset.status) el.classList.toggle('selected', el.dataset.status === selectedStatus);
   });
+  // Đang thuê: chưa biết ngày trả → ẩn "Đến ngày" + "Số ngày"
+  const renting = selectedStatus === 'renting';
+  document.getElementById('closeFields').style.display = renting ? 'none' : 'grid';
+  document.getElementById('rentingNote').style.display = renting ? 'block' : 'none';
+  // Chuyển sang trạng thái cần chốt mà chưa có ngày trả → gợi ý hôm nay
+  if (!renting) {
+    const toEl = document.getElementById('dateTo');
+    const daysEl = document.getElementById('days');
+    if (!toEl.value) {
+      toEl.value = todayISO();
+      const f = document.getElementById('dateFrom').value;
+      if (f) daysEl.value = calcDays(f, toEl.value);
+    }
+  }
 }
 
 function renderBikePicker() {
@@ -1419,10 +1654,16 @@ function saveRental() {
     data.bikeNote = document.getElementById('bikeNote').value.trim();
     data.customerName = document.getElementById('customerName').value.trim();
     data.dateFrom = document.getElementById('dateFrom').value;
-    data.dateTo = document.getElementById('dateTo').value;
-    data.days = parseFloat(document.getElementById('days').value) || 0;
     data.pricePerDay = parseInt(document.getElementById('pricePerDay').value) || 0;
     data.status = selectedStatus;
+    if (selectedStatus === 'renting') {
+      // Đang thuê: chưa chốt ngày trả → bỏ trống đến ngày/số ngày
+      data.dateTo = '';
+      data.days = 0;
+    } else {
+      data.dateTo = document.getElementById('dateTo').value;
+      data.days = parseFloat(document.getElementById('days').value) || 0;
+    }
   } else {
     data.expDesc = document.getElementById('expDesc').value.trim();
     data.expAmount = parseInt(document.getElementById('expAmount').value) || 0;
@@ -1438,15 +1679,18 @@ function saveRental() {
   saveState();
   closeModal('rentalModal');
   renderHome();
+  syncRow(data); // đẩy lên Sheets (upsert theo id)
 }
 
 function deleteRental() {
   if (!editingId) return;
   if (!confirm('Xóa lượt này?')) return;
-  state.rentals = state.rentals.filter(r => r.id !== editingId);
+  const id = editingId;
+  state.rentals = state.rentals.filter(r => r.id !== id);
   saveState();
   closeModal('rentalModal');
   renderHome();
+  syncDelete(id); // xóa dòng tương ứng trên Sheets
 }
 
 // ============ INVENTORY ============
@@ -1477,7 +1721,7 @@ function renderInventory() {
 
   const monthRentals = state.rentals.filter(r =>
     r.kind === 'rental' &&
-    r.status !== 'cancelled' && r.status !== 'planned' &&
+    r.status === 'unpaid' &&
     r.dateFrom && r.dateFrom.startsWith(ym)
   );
   const totalDays = monthRentals.reduce((s, r) => s + (r.days || 0), 0);
@@ -1485,12 +1729,16 @@ function renderInventory() {
   const expenses = state.rentals
     .filter(r => r.kind === 'expense' && (r.createdAt || '').startsWith(ym))
     .reduce((s, r) => s + (r.expAmount || 0), 0);
+  const fees = state.rentals
+    .filter(r => r.kind === 'fee' && (r.createdAt || '').startsWith(ym))
+    .reduce((s, r) => s + (r.expAmount || 0), 0);
 
   document.getElementById('monthStats').innerHTML = `
     <div class="stat-row"><span class="k">Số lượt thuê</span><span class="v">${monthRentals.length}</span></div>
     <div class="stat-row"><span class="k">Tổng ngày thuê</span><span class="v">${String(totalDays).replace('.', ',')}</span></div>
     <div class="stat-row"><span class="k">Phải trả Minh Quý</span><span class="v">${fmtMoney(totalRevenue)}<span class="u">đ</span></span></div>
-    <div class="stat-row"><span class="k">Đã ứng trước</span><span class="v red">−${fmtMoney(expenses)}<span class="u">đ</span></span></div>
+    <div class="stat-row"><span class="k">Phát sinh trả thêm</span><span class="v">+${fmtMoney(fees)}<span class="u">đ</span></span></div>
+    <div class="stat-row"><span class="k">Em Lượng chi</span><span class="v red">−${fmtMoney(expenses)}<span class="u">đ</span></span></div>
   `;
 }
 
@@ -1504,6 +1752,9 @@ function adjustInv(id, delta) {
 function renderSettings() {
   document.getElementById('homestayName').value = state.homestay || '';
   document.getElementById('opName').textContent = state.homestay || 'Lượng';
+  document.getElementById('sheetsUrl').value = state.sheetsUrl || '';
+  document.getElementById('sheetsStatus').textContent =
+    state.sheetsUrl ? 'Đã kết nối' : 'Chưa kết nối';
   const list = document.getElementById('bikeConfigList');
   list.innerHTML = state.bikes.map((b, i) => `
     <div class="bike-row" style="--i:${i}">
@@ -1541,61 +1792,38 @@ function saveHomestayName() {
 let exportSelected = new Set();
 
 function openExport() {
-  const list = state.rentals
-    .filter(r => r.status === 'unpaid' || r.status === 'planned' || r.kind === 'expense')
-    .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''));
-
-  exportSelected = new Set(list.filter(r => r.status === 'unpaid' || r.kind === 'expense').map(r => r.id));
-
-  const html = list.map(r => {
-    const checked = exportSelected.has(r.id) ? 'checked' : '';
-    let label, amt, cls = '';
-    if (r.kind === 'expense') {
-      label = (r.expDesc || 'Chi phí') + ' · ứng trước';
-      amt = '−' + fmtMoney(r.expAmount || 0);
-      cls = 'expense';
-    } else {
-      const b = bikeById(r.bikeId);
-      label = `${b.name}${r.bikeNote ? ' ' + r.bikeNote : ''} · ${fmtDate(r.dateFrom)}→${fmtDate(r.dateTo)}`;
-      amt = fmtMoney(calcAmount(r));
-    }
-    return `<label class="check-item ${cls}">
-      <input type="checkbox" ${checked} onchange="toggleExport('${r.id}', this.checked)">
-      <div class="ci-info">${escapeHtml(label)}</div>
-      <div class="ci-amount">${amt}</div>
-    </label>`;
-  }).join('');
-
-  document.getElementById('exportCheckList').innerHTML = html || `<div class="empty"><div class="e-title">Không có mục nào</div></div>`;
+  // Lấy: Cần TT + Đang thuê + Dự kiến + phát sinh + em Lượng chi (bỏ lượt đã hủy)
+  exportSelected = new Set(
+    state.rentals
+      .filter(r => r.kind === 'expense' || r.kind === 'fee'
+        || r.status === 'unpaid' || r.status === 'renting' || r.status === 'planned')
+      .map(r => r.id)
+  );
 
   const today = new Date();
   document.getElementById('exportTitle').value =
     `Quyết toán xe ngày ${today.getDate()}/${today.getMonth() + 1}`;
 
-  document.getElementById('exportCanvas').style.display = 'none';
-  document.getElementById('exportActions').style.display = 'none';
+  const empty = exportSelected.size === 0;
+  document.getElementById('exportEmpty').style.display = empty ? 'block' : 'none';
+  document.getElementById('exportCanvas').style.display = empty ? 'none' : 'block';
+  document.getElementById('exportActions').style.display = empty ? 'none' : 'grid';
 
   showModal('exportModal');
+  if (!empty) handleGenerate();
 }
 
-function toggleExport(id, on) {
-  if (on) exportSelected.add(id);
-  else exportSelected.delete(id);
-}
-
-async function handleGenerate() {
-  const btn = document.getElementById('generateBtn');
-  const orig = btn.textContent;
-  btn.textContent = 'Đang tạo ảnh…';
-  btn.disabled = true;
-  try {
-    await generateReport();
-  } catch (e) {
-    alert('Lỗi: ' + e.message);
-  } finally {
-    btn.textContent = orig;
-    btn.disabled = false;
-  }
+let _genTimer = null;
+function handleGenerate() {
+  if (exportSelected.size === 0) return;
+  clearTimeout(_genTimer);
+  _genTimer = setTimeout(async () => {
+    try {
+      await generateReport();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 120);
 }
 
 // Preload an image and resolve with the Image element (or null on error)
@@ -1637,26 +1865,27 @@ function drawImageCover(ctx, img, x, y, w, h) {
 }
 
 // Draw the wrench glyph for expense rows
-function drawWrenchIcon(ctx, cx, cy, size, color) {
+// Icon tròn có dấu cộng/trừ cho khoản tiền (phát sinh: +, em Lượng chi: −)
+function drawSignIcon(ctx, cx, cy, size, color, sign) {
   ctx.save();
+  const r = size / 2;
+  // vòng tròn viền
   ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.translate(cx, cy);
-  ctx.rotate(-Math.PI / 4);
-  const s = size / 22;
-  // handle
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(-3 * s, -2 * s);
-  ctx.lineTo(-3 * s, 8 * s);
-  ctx.lineTo(3 * s, 8 * s);
-  ctx.lineTo(3 * s, -2 * s);
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.stroke();
-  // head opening
+  // dấu
+  const arm = r * 0.5;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(0, -5 * s, 5 * s, Math.PI * 0.15, Math.PI * 0.85, false);
+  ctx.moveTo(cx - arm, cy);
+  ctx.lineTo(cx + arm, cy);
+  if (sign === '+') {
+    ctx.moveTo(cx, cy - arm);
+    ctx.lineTo(cx, cy + arm);
+  }
   ctx.stroke();
   ctx.restore();
 }
@@ -1668,7 +1897,14 @@ async function generateReport() {
   const title = document.getElementById('exportTitle').value || 'Quyết toán xe';
   const includeInv = document.getElementById('includeInventory').checked;
   const rows = state.rentals.filter(r => exportSelected.has(r.id))
-    .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''));
+    .sort((a, b) => {
+      // Cần TT → đang thuê → dự kiến → phát sinh → em Lượng chi
+      const rank = (r) => r.kind === 'fee' ? 3 : r.kind === 'expense' ? 4
+        : r.status === 'renting' ? 1 : r.status === 'planned' ? 2 : 0;
+      const ra = rank(a), rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      return (a.dateFrom || '').localeCompare(b.dateFrom || '');
+    });
 
   // Preload images
   const neededIds = new Set();
@@ -1688,7 +1924,7 @@ async function generateReport() {
   const W = 750;
   const padding = 32;
   const cardGap = 14;
-  const cardH = 130;
+  const cardH = 152;
   const headerH = 180;
   const summaryH = 200;
   const invHeaderH = 80;
@@ -1737,15 +1973,16 @@ async function generateReport() {
   ctx.fillStyle = '#9B9A97';
   ctx.font = '14px "Geist Mono", monospace';
   ctx.textAlign = 'left';
-  ctx.fillText(`${rows.length} mục thanh toán`, padding, y + headerH - 16);
+  ctx.fillText(`${rows.length} mục`, padding, y + headerH - 16);
 
   y += headerH + 16;
 
   // ===== RENTAL CARDS =====
+  // Đang thuê & Dự kiến chỉ để thông tin, không tính vào tổng cần thanh toán
   let total = 0;
   rows.forEach((r, idx) => {
     drawRentalCard(ctx, r, idx, padding, y, W - 2 * padding, cardH, imgCache);
-    total += calcAmount(r);
+    if (r.status !== 'renting' && r.status !== 'planned') total += calcAmount(r);
     y += cardH + cardGap;
   });
 
@@ -1774,9 +2011,18 @@ async function generateReport() {
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.font = '13px "Be Vietnam Pro", sans-serif';
   ctx.textAlign = 'left';
-  let subText = `Tổng ${rows.length} mục`;
+  const rentingCount = rows.filter(r => r.status === 'renting').length;
+  const plannedCount = rows.filter(r => r.status === 'planned').length;
+  const payCount = rows.length - rentingCount - plannedCount;
+  let subText = `Tổng ${payCount} mục cần thanh toán`;
+  const feeCount = rows.filter(r => r.kind === 'fee').length;
   const expCount = rows.filter(r => r.kind === 'expense').length;
-  if (expCount > 0) subText += ` · đã trừ ${expCount} khoản ứng trước`;
+  if (feeCount > 0) subText += ` · cộng ${feeCount} phát sinh`;
+  if (expCount > 0) subText += ` · trừ ${expCount} khoản em Lượng chi`;
+  const infoBits = [];
+  if (rentingCount > 0) infoBits.push(`${rentingCount} đang thuê`);
+  if (plannedCount > 0) infoBits.push(`${plannedCount} dự kiến`);
+  if (infoBits.length) subText += ` · ${infoBits.join(', ')} (chưa chốt)`;
   ctx.fillText(subText, padding + 28, y + summaryH - 28);
 
   y += summaryH;
@@ -1858,32 +2104,41 @@ function drawRentalCard(ctx, r, idx, x, y, w, h, imgCache) {
   let nameText, dateText, customerText, daysLabel, amtText, amtColor = '#2F3437';
   let tagText, tagBg, tagInk, accentColor = '#EAEAEA';
 
-  if (r.kind === 'expense') {
+  if (r.kind === 'fee') {
     nameText = r.expDesc || 'Chi phí phát sinh';
-    dateText = 'Em Lượng chi · Minh Quý hoàn lại';
+    dateText = 'Phát sinh · trả thêm Minh Quý';
+    customerText = '';
+    daysLabel = '';
+    amtText = '+' + fmtMoney(r.expAmount || 0);
+    amtColor = '#2F3437';
+    tagText = 'Phát sinh'; tagBg = '#FDEBEC'; tagInk = '#9F2F2D';
+    accentColor = '#9F2F2D';
+  } else if (r.kind === 'expense') {
+    nameText = r.expDesc || 'Chi phí phát sinh';
+    dateText = 'Em Lượng chi · trừ vào số phải trả';
     customerText = '';
     daysLabel = '';
     amtText = '−' + fmtMoney(r.expAmount || 0);
     amtColor = '#9F2F2D';
-    tagText = 'Ứng trước'; tagBg = '#FBF3DB'; tagInk = '#956400';
+    tagText = 'Em Lượng chi'; tagBg = '#FBF3DB'; tagInk = '#956400';
     accentColor = '#956400';
   } else {
     const b = bikeById(r.bikeId);
     nameText = b.name + (r.bikeNote ? ' · ' + r.bikeNote : '');
-    dateText = `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`;
     customerText = r.customerName ? `Khách: ${r.customerName}` : '';
-    const days = String(r.days || 0).replace('.', ',');
-    daysLabel = `${days} ngày × ${fmtMoney(r.pricePerDay || 0)}`;
     if (r.status === 'planned') {
+      dateText = `Dự kiến ${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`;
+      daysLabel = `${String(r.days || 0).replace('.', ',')} ngày × ${fmtMoney(r.pricePerDay || 0)} · chưa chốt`;
       tagText = 'Dự kiến'; tagBg = '#E1F3FE'; tagInk = '#1F6C9F';
       amtText = '—'; amtColor = '#9B9A97'; accentColor = '#1F6C9F';
-    } else if (r.status === 'cancelled') {
-      tagText = 'Đã hủy'; tagBg = '#F7F6F3'; tagInk = '#787774';
-      amtText = '0'; amtColor = '#9B9A97'; accentColor = '#9B9A97';
-    } else if (r.status === 'paid') {
-      tagText = 'Đã TT'; tagBg = '#EDF3EC'; tagInk = '#346538';
-      amtText = fmtMoney(calcAmount(r)); amtColor = '#787774'; accentColor = '#346538';
+    } else if (r.status === 'renting') {
+      dateText = `Thuê từ ${fmtDate(r.dateFrom)}`;
+      daysLabel = 'Chưa trả xe · chưa chốt tiền';
+      tagText = 'Đang thuê'; tagBg = '#EDF3EC'; tagInk = '#346538';
+      amtText = '—'; amtColor = '#9B9A97'; accentColor = '#346538';
     } else {
+      dateText = `${fmtDate(r.dateFrom)} → ${fmtDate(r.dateTo)}`;
+      daysLabel = `${String(r.days || 0).replace('.', ',')} ngày × ${fmtMoney(r.pricePerDay || 0)}`;
       tagText = 'Cần TT'; tagBg = '#FDEBEC'; tagInk = '#9F2F2D';
       amtText = fmtMoney(calcAmount(r));
       accentColor = '#9F2F2D';
@@ -1907,82 +2162,85 @@ function drawRentalCard(ctx, r, idx, x, y, w, h, imgCache) {
   ctx.fillRect(x, y, 4, h);
   ctx.restore();
 
-  // Image
-  const imgSize = 96;
+  // Image (ngang hơn, cho dáng xe máy)
+  const imgW = 134;
+  const imgH = 108;
   const imgX = x + 18;
-  const imgY = y + (h - imgSize) / 2;
+  const imgY = y + (h - imgH) / 2;
 
   ctx.save();
-  clipRoundedRect(ctx, imgX, imgY, imgSize, imgSize, 10);
+  clipRoundedRect(ctx, imgX, imgY, imgW, imgH, 12);
   ctx.fillStyle = '#F7F6F3';
-  ctx.fillRect(imgX, imgY, imgSize, imgSize);
+  ctx.fillRect(imgX, imgY, imgW, imgH);
   if (r.kind === 'expense') {
-    drawWrenchIcon(ctx, imgX + imgSize / 2, imgY + imgSize / 2, 36, '#956400');
+    drawSignIcon(ctx, imgX + imgW / 2, imgY + imgH / 2, 44, '#956400', '−');
+  } else if (r.kind === 'fee') {
+    drawSignIcon(ctx, imgX + imgW / 2, imgY + imgH / 2, 44, '#9F2F2D', '+');
   } else {
     const img = imgCache[r.bikeId];
-    if (img) drawImageCover(ctx, img, imgX, imgY, imgSize, imgSize);
+    if (img) drawImageCover(ctx, img, imgX, imgY, imgW, imgH);
   }
   ctx.restore();
 
   // STT
   ctx.fillStyle = '#9B9A97';
-  ctx.font = '500 12px "Geist Mono", monospace';
+  ctx.font = '500 13px "Geist Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('#' + String(idx + 1).padStart(2, '0'), x + w - 18, y + 24);
+  ctx.fillText('#' + String(idx + 1).padStart(2, '0'), x + w - 18, y + 26);
 
   // Tag pill
-  ctx.font = '600 11px "Be Vietnam Pro", sans-serif';
-  const tagW = ctx.measureText(tagText.toUpperCase()).width + 18;
-  const tagH = 22;
+  ctx.font = '600 12px "Be Vietnam Pro", sans-serif';
+  const tagW = ctx.measureText(tagText.toUpperCase()).width + 20;
+  const tagH = 24;
   const tagX = x + w - 18 - tagW;
-  const tagY = y + 34;
+  const tagY = y + 38;
   ctx.fillStyle = tagBg;
-  roundRect(ctx, tagX, tagY, tagW, tagH, 11);
+  roundRect(ctx, tagX, tagY, tagW, tagH, 12);
   ctx.fill();
   ctx.fillStyle = tagInk;
   ctx.textAlign = 'center';
   ctx.fillText(tagText.toUpperCase(), tagX + tagW / 2, tagY + tagH / 2 + 4);
 
   // Right column
-  const colX = imgX + imgSize + 18;
+  const colX = imgX + imgW + 20;
   const colW = x + w - colX - 16;
 
   ctx.fillStyle = '#2F3437';
-  ctx.font = '600 18px "Be Vietnam Pro", sans-serif';
+  ctx.font = '600 21px "Be Vietnam Pro", sans-serif';
   ctx.textAlign = 'left';
   let nm = nameText;
   const nameMaxW = colW - tagW - 36;
   while (ctx.measureText(nm).width > nameMaxW && nm.length > 6) nm = nm.slice(0, -2);
   if (nm !== nameText) nm = nm.slice(0, -1) + '…';
-  ctx.fillText(nm, colX, y + 32);
+  ctx.fillText(nm, colX, y + 40);
 
   ctx.fillStyle = '#787774';
-  ctx.font = '500 13.5px "Geist Mono", monospace';
-  ctx.fillText(dateText, colX, y + 56);
+  ctx.font = '500 15px "Geist Mono", monospace';
+  ctx.fillText(dateText, colX, y + 68);
 
   if (customerText) {
     ctx.fillStyle = '#787774';
-    ctx.font = '500 13px "Be Vietnam Pro", sans-serif';
-    ctx.fillText(customerText, colX, y + 78);
+    ctx.font = '500 14.5px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(customerText, colX, y + 92);
   }
 
   if (daysLabel) {
     ctx.fillStyle = '#9B9A97';
-    ctx.font = '500 12px "Geist Mono", monospace';
+    ctx.font = '500 13px "Geist Mono", monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(daysLabel, colX, y + h - 16);
+    ctx.fillText(daysLabel, colX, y + h - 18);
   }
 
   // Amount
   ctx.fillStyle = '#9B9A97';
-  ctx.font = '500 10px "Geist Mono", monospace';
+  ctx.font = '500 11px "Geist Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('VND', x + w - 18, y + h - 36);
+  ctx.fillText('VND', x + w - 18, y + h - 40);
 
   ctx.fillStyle = amtColor;
-  ctx.font = '700 24px "Be Vietnam Pro", sans-serif';
+  ctx.font = '700 28px "Be Vietnam Pro", sans-serif';
   ctx.textAlign = 'right';
-  ctx.fillText(amtText, x + w - 18, y + h - 14);
+  ctx.fillText(amtText, x + w - 18, y + h - 16);
 }
 
 function drawInvCard(ctx, b, qty, x, y, w, h, imgCache) {
@@ -2046,18 +2304,18 @@ function downloadReport() {
   link.click();
 }
 
-function markSelectedPaid() {
-  if (!confirm(`Đánh dấu ${exportSelected.size} mục là đã thanh toán?`)) return;
-  state.rentals.forEach(r => {
-    if (exportSelected.has(r.id) && r.kind !== 'expense') {
-      r.status = 'paid';
-    }
-  });
-  state.rentals = state.rentals.filter(r => !(exportSelected.has(r.id) && r.kind === 'expense'));
+async function deleteSelectedSettled() {
+  if (exportSelected.size === 0) { alert('Chưa chọn mục nào.'); return; }
+  if (!confirm(`Xóa ${exportSelected.size} mục đã chốt khỏi sổ (và khỏi Google Sheets)?\n\nChỉ làm sau khi Minh Quý đã thanh toán. Không thể hoàn tác.`)) return;
+  const ids = Array.from(exportSelected);
+  state.rentals = state.rentals.filter(r => !exportSelected.has(r.id));
+  exportSelected.clear();
   saveState();
   closeModal('exportModal');
   renderHome();
-  alert('Đã cập nhật.');
+  // Xóa các dòng tương ứng trên Sheets (bản sao y hệt app)
+  for (const id of ids) await syncDelete(id);
+  alert('Đã xóa các mục đã chốt.');
 }
 
 // ============ MODAL ============
@@ -2085,14 +2343,25 @@ function importData(ev) {
   const file = ev.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.bikes || !data.rentals) throw new Error('Định dạng không hợp lệ');
-      if (!confirm('Khôi phục sẽ ghi đè dữ liệu hiện tại. Tiếp tục?')) return;
+      if (!confirm('Khôi phục sẽ ghi đè cấu hình hiện tại. Tiếp tục?')) return;
+      const keepUrl = state.sheetsUrl; // giữ cấu hình Sheets hiện tại
+      const fileRentals = migrateState(data).rentals || [];
+      data.rentals = [];
       state = data;
+      if (!state.sheetsUrl && keepUrl) state.sheetsUrl = keepUrl;
       saveState();
-      renderHome();
+      // Lượt thuê trong file backup → đẩy lên Sheets (nguồn dữ liệu duy nhất)
+      if (fileRentals.length > 0 &&
+          confirm(`File có ${fileRentals.length} lượt thuê. Đẩy lên Google Sheets?`)) {
+        for (const r of fileRentals) {
+          try { await postToSheets({ action: 'upsert', row: rowForSheet(r) }); } catch (err2) {}
+        }
+      }
+      await loadRentalsFromSheets();
       renderSettings();
       renderInventory();
       alert('Khôi phục thành công.');
@@ -2104,13 +2373,15 @@ function importData(ev) {
 }
 
 function resetAll() {
-  if (!confirm('Xóa toàn bộ dữ liệu? Không thể hoàn tác.')) return;
+  if (!confirm('Xóa cấu hình trên máy này (tên, danh mục xe, kho)?\nLượt thuê trên Google Sheets KHÔNG bị xóa.')) return;
   if (!confirm('Bạn chắc chắn?')) return;
   localStorage.removeItem(STORAGE_KEY);
+  legacyRentals = [];
   state = loadState();
   renderHome();
   renderSettings();
   renderInventory();
+  loadRentalsFromSheets();
 }
 
 // ============ INIT ============
@@ -2123,6 +2394,7 @@ function initTopbar() {
 }
 initTopbar();
 renderHome();
+loadRentalsFromSheets(); // nguồn dữ liệu duy nhất là Google Sheets
 setInterval(initTopbar, 60000);
 
 document.querySelectorAll('.modal-bg').forEach(bg => {
