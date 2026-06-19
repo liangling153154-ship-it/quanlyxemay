@@ -2217,18 +2217,18 @@ function drawRentalCard(ctx, r, idx, x, y, w, h, imgCache) {
   ctx.fillText(nm, colX, y + 40);
 
   ctx.fillStyle = '#787774';
-  ctx.font = '500 15px "Geist Mono", monospace';
-  ctx.fillText(dateText, colX, y + 68);
+  ctx.font = '500 18px "Geist Mono", monospace';
+  ctx.fillText(dateText, colX, y + 70);
 
   if (customerText) {
     ctx.fillStyle = '#787774';
-    ctx.font = '500 14.5px "Be Vietnam Pro", sans-serif';
-    ctx.fillText(customerText, colX, y + 92);
+    ctx.font = '500 17px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(customerText, colX, y + 95);
   }
 
   if (daysLabel) {
     ctx.fillStyle = '#9B9A97';
-    ctx.font = '500 13px "Geist Mono", monospace';
+    ctx.font = '500 16px "Geist Mono", monospace';
     ctx.textAlign = 'left';
     ctx.fillText(daysLabel, colX, y + h - 18);
   }
