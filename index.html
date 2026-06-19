@@ -1919,8 +1919,10 @@ async function generateReport() {
   }));
 
   // ===== Layout (portrait mobile-first) =====
+  // Toàn bộ code vẽ dùng hệ tọa độ 750px; S phóng to bố cục, dpr cho nét.
   const canvas = document.getElementById('exportCanvas');
-  const dpr = 2;
+  const S = 1.18;         // phóng to bố cục cho rộng/thoáng hơn
+  const dpr = 2.5;        // độ nét ảnh xuất
   const W = 750;
   const padding = 32;
   const cardGap = 14;
@@ -1938,12 +1940,12 @@ async function generateReport() {
   }
   H += footH + padding;
 
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
+  canvas.width = Math.round(W * S * dpr);
+  canvas.height = Math.round(H * S * dpr);
   canvas.style.width = '100%';
   canvas.style.display = 'block';
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
+  ctx.scale(S * dpr, S * dpr);
 
   // BG
   ctx.fillStyle = '#FBFBFA';
