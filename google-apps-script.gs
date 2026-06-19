@@ -41,7 +41,8 @@ var HEADERS = [
   'gia_ngay',     // K
   'thanh_tien',   // L - số tiền (thuê dương, ứng trước âm)
   'mo_ta_chi_phi',// M - cho khoản ứng trước
-  'json'          // N - dữ liệu gốc của app (đừng sửa tay cột này)
+  'thuoc_luot',   // N - chi phí gắn vào lượt thuê nào
+  'json'          // O - dữ liệu gốc của app (đừng sửa tay cột này)
 ];
 
 function doPost(e) {
@@ -79,17 +80,27 @@ function getSheet() {
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
   }
-  // Đảm bảo có hàng tiêu đề (và nâng cấp khi thêm cột mới)
+  // Sheet trống → tạo hàng tiêu đề
   if (sh.getLastRow() === 0) {
     sh.appendRow(HEADERS);
     sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
     sh.setFrozenRows(1);
-  } else {
-    var head = sh.getRange(1, 1, 1, HEADERS.length).getValues()[0];
-    if (head[HEADERS.length - 1] !== HEADERS[HEADERS.length - 1]) {
-      sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-      sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    return sh;
+  }
+  // Nâng cấp: thêm cột 'thuoc_luot' trước 'json' nếu sheet cũ chưa có.
+  // Chèn cột thật để dữ liệu 'json' không bị lệch ô.
+  var curW = sh.getLastColumn();
+  var head = sh.getRange(1, 1, 1, curW).getValues()[0];
+  if (head.indexOf('thuoc_luot') === -1) {
+    var jsonIdx = head.indexOf('json'); // 0-based
+    if (jsonIdx !== -1) {
+      sh.insertColumnBefore(jsonIdx + 1);              // chèn cột trống trước json
+      sh.getRange(1, jsonIdx + 1).setValue('thuoc_luot');
+    } else {
+      sh.getRange(1, curW + 1).setValue('thuoc_luot'); // không có json: thêm cuối
     }
+    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
   }
   return sh;
 }

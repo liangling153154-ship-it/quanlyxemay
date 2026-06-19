@@ -255,6 +255,26 @@ h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.015em; }
 .rental:last-child { border-bottom: none; }
 .rental:active { background: var(--bg-soft); }
 
+/* Khoản chi phí gắn vào lượt thuê: thụt vào, nền nhạt, có vạch nối */
+.rental.linked-child {
+  padding-left: 34px;
+  background: var(--bg-soft);
+  position: relative;
+}
+.rental.linked-child::before {
+  content: "";
+  position: absolute;
+  left: 18px; top: 0; bottom: 50%;
+  width: 1px; background: var(--line);
+}
+.rental.linked-child::after {
+  content: "";
+  position: absolute;
+  left: 18px; top: 50%;
+  width: 10px; height: 1px; background: var(--line);
+}
+.rental.linked-child .r-thumb { width: 44px; height: 34px; }
+
 .rental .r-thumb {
   width: 64px; height: 48px;
   border-radius: 8px;
@@ -1074,6 +1094,12 @@ kbd {
           <input type="number" id="expAmount" step="1000">
           <div class="hint" id="expHint">Em Lượng chi · sẽ trừ vào số phải trả Minh Quý</div>
         </div>
+        <div class="form-row">
+          <label>Thuộc lượt thuê nào <span style="color:var(--ink-mute);text-transform:none;letter-spacing:0;font-family:inherit;font-size:11px;">· có thể bỏ trống</span></label>
+          <select id="expLinkedId">
+            <option value="">— Không gắn lượt nào —</option>
+          </select>
+        </div>
       </div>
 
       <button class="btn btn-primary" onclick="saveRental()">Lưu</button>
@@ -1205,6 +1231,7 @@ function rowForSheet(r) {
       tu_ngay: '', den_ngay: '', so_ngay: '', gia_ngay: '',
       thanh_tien: calcAmount(r),
       mo_ta_chi_phi: r.expDesc || '',
+      thuoc_luot: linkedLabel(r.linkedId),
     };
   } else {
     const b = bikeById(r.bikeId);
@@ -1222,10 +1249,22 @@ function rowForSheet(r) {
       gia_ngay: r.pricePerDay || 0,
       thanh_tien: calcAmount(r),
       mo_ta_chi_phi: '',
+      thuoc_luot: '',
     };
   }
   row.json = JSON.stringify(r);
   return row;
+}
+
+// Mô tả lượt thuê được gắn (cho cột Sheets), rỗng nếu không gắn / không tìm thấy
+function linkedLabel(id) {
+  if (!id) return '';
+  const r = state.rentals.find(x => x.id === id && x.kind === 'rental');
+  if (!r) return '';
+  const b = bikeById(r.bikeId);
+  const who = r.customerName ? ' · ' + r.customerName : '';
+  const when = r.dateFrom ? ' (' + fmtDateVN(r.dateFrom) + ')' : '';
+  return `${b.name}${r.bikeNote ? ' ' + r.bikeNote : ''}${who}${when}`;
 }
 
 // Nạp toàn bộ lượt từ Google Sheets (gọi khi mở app hoặc bấm Tải lại)
@@ -1420,7 +1459,8 @@ function renderHome() {
       <div class="e-sub">Cần kết nối mạng</div>
     </div>`;
   } else {
-    list.innerHTML = `<div class="ledger">${rentals.map((r, i) => renderRental(r, i)).join('')}</div>`;
+    const ordered = orderWithLinked(rentals);
+    list.innerHTML = `<div class="ledger">${ordered.map((it, i) => renderRental(it.r, i, it.child)).join('')}</div>`;
   }
 
   // Summary
@@ -1449,10 +1489,30 @@ function renderHome() {
   }
 }
 
-function renderRental(r, idx) {
+// Sắp xếp: mỗi lượt thuê kèm theo các khoản chi phí gắn vào nó (thụt vào).
+// Khoản không gắn / gắn tới lượt không hiển thị → đứng riêng ở cuối.
+function orderWithLinked(list) {
+  const isExp = r => r.kind === 'expense' || r.kind === 'fee';
+  const rentals = list.filter(r => !isExp(r));
+  const exps = list.filter(isExp);
+  const idsHere = new Set(rentals.map(r => r.id));
+  const out = [];
+  rentals.forEach(r => {
+    out.push({ r, child: false });
+    exps.filter(e => e.linkedId && e.linkedId === r.id)
+        .forEach(e => out.push({ r: e, child: true }));
+  });
+  // chi phí còn lại (không gắn, hoặc gắn tới lượt không có trong danh sách)
+  exps.filter(e => !e.linkedId || !idsHere.has(e.linkedId))
+      .forEach(e => out.push({ r: e, child: false }));
+  return out;
+}
+
+function renderRental(r, idx, isChild) {
   const styleDelay = `--i:${idx}`;
+  const childCls = isChild ? ' linked-child' : '';
   if (r.kind === 'fee') {
-    return `<div class="rental fee" style="${styleDelay}" onclick="editRental('${r.id}')">
+    return `<div class="rental fee${childCls}" style="${styleDelay}" onclick="editRental('${r.id}')">
       <div class="r-thumb">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14M5 12h14"/>
@@ -1463,7 +1523,7 @@ function renderRental(r, idx) {
           <span class="bike-name">${escapeHtml(r.expDesc || 'Chi phí phát sinh')}</span>
           <span class="tag tag-red">Phát sinh</span>
         </div>
-        <div class="meta-row">Trả thêm cho Minh Quý</div>
+        <div class="meta-row">${isChild ? 'Phát sinh từ lượt thuê này' : 'Trả thêm cho Minh Quý'}</div>
       </div>
       <div class="amount-block">
         <div class="amount">+${fmtMoney(r.expAmount || 0)}</div>
@@ -1472,7 +1532,7 @@ function renderRental(r, idx) {
     </div>`;
   }
   if (r.kind === 'expense') {
-    return `<div class="rental expense" style="${styleDelay}" onclick="editRental('${r.id}')">
+    return `<div class="rental expense${childCls}" style="${styleDelay}" onclick="editRental('${r.id}')">
       <div class="r-thumb">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
@@ -1483,7 +1543,7 @@ function renderRental(r, idx) {
           <span class="bike-name">${escapeHtml(r.expDesc || 'Chi phí phát sinh')}</span>
           <span class="tag tag-yellow">Em Lượng chi</span>
         </div>
-        <div class="meta-row">Trừ vào số phải trả Minh Quý</div>
+        <div class="meta-row">${isChild ? 'Chi cho lượt thuê này' : 'Trừ vào số phải trả Minh Quý'}</div>
       </div>
       <div class="amount-block">
         <div class="amount">−${fmtMoney(r.expAmount || 0)}</div>
@@ -1555,10 +1615,30 @@ function openRentalModal() {
   document.getElementById('pricePerDay').value = bikeById(selectedBikeId).price;
   document.getElementById('expDesc').value = '';
   document.getElementById('expAmount').value = '';
+  fillLinkedOptions('', null);
   renderBikePicker();
   updateKindUI();
   updateStatusUI();
   showModal('rentalModal');
+}
+
+// Điền danh sách lượt thuê vào ô "Thuộc lượt thuê nào".
+// excludeId: id đang sửa (không tự gắn vào chính nó).
+function fillLinkedOptions(selectedId, excludeId) {
+  const sel = document.getElementById('expLinkedId');
+  const opts = ['<option value="">— Không gắn lượt nào —</option>'];
+  state.rentals
+    .filter(r => r.kind === 'rental' && r.id !== excludeId)
+    .sort((a, b) => (a.dateFrom || '').localeCompare(b.dateFrom || ''))
+    .forEach(r => {
+      const b = bikeById(r.bikeId);
+      const who = r.customerName ? ' · ' + r.customerName : '';
+      const when = r.dateFrom ? ' (' + fmtDate(r.dateFrom) + ')' : '';
+      const label = `${b.name}${r.bikeNote ? ' ' + r.bikeNote : ''}${who}${when}`;
+      const on = r.id === selectedId ? ' selected' : '';
+      opts.push(`<option value="${r.id}"${on}>${escapeHtml(label)}</option>`);
+    });
+  sel.innerHTML = opts.join('');
 }
 
 function editRental(id) {
@@ -1578,6 +1658,7 @@ function editRental(id) {
   document.getElementById('pricePerDay').value = r.pricePerDay || 0;
   document.getElementById('expDesc').value = r.expDesc || '';
   document.getElementById('expAmount').value = r.expAmount || '';
+  fillLinkedOptions(r.linkedId || '', id);
   renderBikePicker();
   updateKindUI();
   updateStatusUI();
@@ -1668,6 +1749,7 @@ function saveRental() {
     data.expDesc = document.getElementById('expDesc').value.trim();
     data.expAmount = parseInt(document.getElementById('expAmount').value) || 0;
     data.status = 'unpaid';
+    data.linkedId = document.getElementById('expLinkedId').value || '';
   }
 
   if (editingId) {
@@ -1896,7 +1978,7 @@ function drawSignIcon(ctx, cx, cy, size, color, sign) {
 async function generateReport() {
   const title = document.getElementById('exportTitle').value || 'Quyết toán xe';
   const includeInv = document.getElementById('includeInventory').checked;
-  const rows = state.rentals.filter(r => exportSelected.has(r.id))
+  const sorted = state.rentals.filter(r => exportSelected.has(r.id))
     .sort((a, b) => {
       // Cần TT → đang thuê → dự kiến → phát sinh → em Lượng chi
       const rank = (r) => r.kind === 'fee' ? 3 : r.kind === 'expense' ? 4
@@ -1905,6 +1987,9 @@ async function generateReport() {
       if (ra !== rb) return ra - rb;
       return (a.dateFrom || '').localeCompare(b.dateFrom || '');
     });
+  // Gộp khoản chi phí gắn vào lượt thuê (thụt dưới lượt đó)
+  const items = orderWithLinked(sorted);
+  const rows = items.map(it => it.r); // dùng lại cho preload, tổng, đếm
 
   // Preload images
   const neededIds = new Set();
@@ -1982,8 +2067,11 @@ async function generateReport() {
   // ===== RENTAL CARDS =====
   // Đang thuê & Dự kiến chỉ để thông tin, không tính vào tổng cần thanh toán
   let total = 0;
-  rows.forEach((r, idx) => {
-    drawRentalCard(ctx, r, idx, padding, y, W - 2 * padding, cardH, imgCache);
+  const indent = 36; // độ thụt cho khoản chi phí gắn vào lượt thuê
+  items.forEach(({ r, child }, idx) => {
+    const cx = child ? padding + indent : padding;
+    const cw = child ? W - 2 * padding - indent : W - 2 * padding;
+    drawRentalCard(ctx, r, idx, cx, y, cw, cardH, imgCache);
     if (r.status !== 'renting' && r.status !== 'planned') total += calcAmount(r);
     y += cardH + cardGap;
   });
