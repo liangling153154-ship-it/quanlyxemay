@@ -1167,6 +1167,9 @@ const DEFAULT_BIKES = [
 // Web App đã deploy từ google-apps-script.gs (đổi được trong Cài đặt)
 const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw9-M_UC1mmToFuR4zCp3HDtz81ZPD0C-NckgNvAeBsJ1JrHOak9aBDnh8_CD827nal/exec';
 
+// Mã cơ sở — chọn tab dữ liệu trên Google Sheets. Bản này: KS Hòa An.
+const BASE = 'hoaan';
+
 // Lượt thuê còn sót trong localStorage từ bản cũ (trước khi chuyển nguồn sang Sheets)
 let legacyRentals = [];
 
@@ -1306,7 +1309,7 @@ async function postToSheets(payload) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(Object.assign({ base: BASE }, payload)),
     redirect: 'follow',
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);

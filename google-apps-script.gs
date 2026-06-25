@@ -51,15 +51,16 @@ function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     var action = body.action || 'upsert';
+    var base = body.base; // mã cơ sở: chọn tab dữ liệu (vd 'hoaan', 'sens')
 
     if (action === 'upsert') {
-      return json(upsertRow(body.row));
+      return json(upsertRow(body.row, base));
     } else if (action === 'delete') {
-      return json(deleteRow(body.id));
+      return json(deleteRow(body.id, base));
     } else if (action === 'list') {
-      return json(listRows());
+      return json(listRows(base));
     } else if (action === 'ping') {
-      return json({ ok: true, msg: 'pong' });
+      return json({ ok: true, msg: 'pong', sheet: sheetNameForBase(base) });
     }
     return json({ ok: false, error: 'Unknown action: ' + action });
   } catch (err) {
@@ -74,11 +75,20 @@ function doGet() {
   return json({ ok: true, msg: 'So thue xe web app dang chay.' });
 }
 
-function getSheet() {
+// Mỗi cơ sở dùng 1 tab riêng trong cùng file Sheet.
+// hoaan / mặc định → tab 'Rentals' (giữ nguyên dữ liệu cũ).
+function sheetNameForBase(base) {
+  base = String(base || '').toLowerCase();
+  if (base === 'sens') return 'Rentals_Sens';
+  return SHEET_NAME; // 'Rentals' cho Hòa An và mọi request cũ chưa có base
+}
+
+function getSheet(base) {
+  var name = sheetNameForBase(base);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_NAME);
+  var sh = ss.getSheetByName(name);
   if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME);
+    sh = ss.insertSheet(name);
   }
   // Sheet trống → tạo hàng tiêu đề
   if (sh.getLastRow() === 0) {
@@ -106,8 +116,8 @@ function getSheet() {
 }
 
 // Trả về toàn bộ lượt (đọc từ cột json) để app nạp khi mở.
-function listRows() {
-  var sh = getSheet();
+function listRows(base) {
+  var sh = getSheet(base);
   var last = sh.getLastRow();
   if (last < 2) return { ok: true, rows: [] };
   var jsonCol = HEADERS.indexOf('json') + 1;
@@ -133,9 +143,9 @@ function findRowById(sh, id) {
 }
 
 // row: object có các khóa trùng HEADERS. Tạo mới nếu chưa có id, ngược lại cập nhật.
-function upsertRow(row) {
+function upsertRow(row, base) {
   if (!row || !row.id) return { ok: false, error: 'Thiếu id' };
-  var sh = getSheet();
+  var sh = getSheet(base);
   var values = HEADERS.map(function (h) {
     return row[h] !== undefined && row[h] !== null ? row[h] : '';
   });
@@ -149,9 +159,9 @@ function upsertRow(row) {
   }
 }
 
-function deleteRow(id) {
+function deleteRow(id, base) {
   if (!id) return { ok: false, error: 'Thiếu id' };
-  var sh = getSheet();
+  var sh = getSheet(base);
   var rowNum = findRowById(sh, id);
   if (rowNum === 0) return { ok: true, mode: 'noop', id: id }; // đã không còn
   sh.deleteRow(rowNum);
